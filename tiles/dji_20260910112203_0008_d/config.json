@@ -1,5 +1,8 @@
 {
   "mode": "flat",
   "file": "plan.jpg",
-  "label": "Drone Shot #1"
+  "label": "Drone Shot #1",
+  "lat": 46.953366083333336,
+  "lng": -122.77963286111111,
+  "heading": 202.5
 }

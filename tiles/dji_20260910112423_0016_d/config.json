@@ -1,8 +1,8 @@
 {
   "mode": "single",
   "format": "raw",
-  "yaw_1": 1.9986446599721202,
-  "pitch_1": 0.18505195265829147,
+  "yaw_1": -0.7546538497463047,
+  "pitch_1": 0.8790511599121001,
   "yaw_2": 0.0,
   "pitch_2": 0.0,
   "lat": 46.95293088888889,
@@ -10,7 +10,30 @@
   "label_1": "DJI_20260910112423_0016_D (2026/09/10)",
   "label_2": "",
   "autorotate": false,
-  "hotspots_1": [],
+  "hotspots_1": [
+    {
+      "yaw": 5.610815369648856,
+      "pitch": 0.588139526415496,
+      "title": "Downstream",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20260910_105017_00_987",
+      "link_icon": "ground"
+    },
+    {
+      "yaw": 5.411652948441889,
+      "pitch": 1.049679089663094,
+      "title": "Upstream",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20260910_104917_00_986",
+      "link_icon": "ground"
+    }
+  ],
   "hotspots_2": [],
   "levels_1": [],
   "levels_2": [],
@@ -19,7 +42,7 @@
   "basemap_url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
   "mobile_1": 5000,
   "mobile_2": 0,
-  "heading_offset": null,
+  "heading_offset": 297.1142883075905,
   "overlays": [
     {
       "label": "Ortho (9/10/2026)",

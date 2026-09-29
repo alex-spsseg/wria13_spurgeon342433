@@ -10,7 +10,30 @@
   "label_1": "IMG_20260910_104917_00_986 (2026/09/10)",
   "label_2": "",
   "autorotate": false,
-  "hotspots_1": [],
+  "hotspots_1": [
+    {
+      "yaw": -0.6146538215508155,
+      "pitch": -0.421308977245733,
+      "title": "Aerial 360 Shot",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "dji_20260910112423_0016_d",
+      "link_icon": "aerial",
+      "images": []
+    },
+    {
+      "yaw": 3.14627407444204,
+      "pitch": 0,
+      "title": "Culvert Outlets",
+      "text": "",
+      "link": "",
+      "category": "link",
+      "pin_style": "label_hover",
+      "target": "img_20260910_105017_00_987"
+    }
+  ],
   "hotspots_2": [],
   "levels_1": [],
   "levels_2": [],
@@ -19,7 +42,7 @@
   "basemap_url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
   "mobile_1": 5000,
   "mobile_2": 0,
-  "heading_offset": null,
+  "heading_offset": 84.88754962534188,
   "overlays": [
     {
       "label": "Ortho (9/10/2026)",

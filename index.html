@@ -150,6 +150,14 @@
       background: #1b3f95; color: #ffffff; border: 1px solid rgba(255,255,255,0.2);
       border-radius: 4px; width: 24px; height: 24px; cursor: pointer; font-size: 13px; line-height: 1;
     }
+    /* Local preview only: rotate the PDF and save the choice to the stop's config.json. */
+    #flat-stop-rotate-tools { display: none; flex: none; align-items: center; gap: 6px; }
+    #flat-stop-rotate-tools button {
+      background: #1b3f95; color: #ffffff; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px; min-width: 24px; height: 24px; padding: 0 8px; cursor: pointer;
+      font-size: 13px; line-height: 1;
+    }
+    #flat-stop-rotate-tools button:hover { background: #019fc4; }
     #flat-stop-page-nav button:hover { background: #019fc4; }
     #flat-stop-page-nav button:disabled { opacity: 0.4; cursor: default; background: #1b3f95; }
     /* The pdf.js-rendered canvas (or the plain image) is panned and
@@ -603,7 +611,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-09-28 13:07:10</div>
+  <div id="build-timestamp">Built 2026-09-29 10:40:54</div>
 
   <div id="status-banner"></div>
 
@@ -629,6 +637,11 @@
           <button id="flat-stop-prev-page" type="button" title="Previous page">&#8592;</button>
           <span id="flat-stop-page-label"></span>
           <button id="flat-stop-next-page" type="button" title="Next page">&#8594;</button>
+        </span>
+        <span id="flat-stop-rotate-tools">
+          <button id="flat-stop-rotate-left" type="button" title="Rotate 90 degrees counterclockwise and save">&#8634;</button>
+          <button id="flat-stop-rotate-right" type="button" title="Rotate 90 degrees clockwise and save">&#8635;</button>
+          <button id="flat-stop-rotate-auto" type="button" title="Go back to automatic orientation">Auto</button>
         </span>
         <span id="flat-stop-zoom-hint">Drag to pan &middot; scroll to zoom &middot; double-click to reset</span>
       </div>
@@ -1875,6 +1888,10 @@
     var viewConeLayer = null;
     var viewConePolygons = [];
     var VIEWCONE_HALF_ANGLE = 30, VIEWCONE_RADIUS_M = 35;
+    // Flat stops (drone candids) have a fixed camera direction and a
+    // narrower field of view than a pano, so the cone is static and tighter.
+    var VIEWCONE_FLAT_HALF_ANGLE = 20;
+    var flatConeActive = false;
 
     function destinationPoint(lat, lng, bearingDeg, distanceMeters) {
       var R = 6371000;
@@ -2034,8 +2051,9 @@
         if (viewConeLayer) { siteMap.removeLayer(viewConeLayer); viewConeLayer = null; viewConePolygons = []; }
         return;
       }
-      var liveYawDeg = viewL ? (viewL.parameters().yaw * 180 / Math.PI) : 0;
+      var liveYawDeg = (!flatConeActive && viewL) ? (viewL.parameters().yaw * 180 / Math.PI) : 0;
       var heading = (currentHeadingOffset + liveYawDeg + 360) % 360;
+      var halfAngle = flatConeActive ? VIEWCONE_FLAT_HALF_ANGLE : VIEWCONE_HALF_ANGLE;
 
       // A fade-with-distance look (solid near the marker, see-through
       // toward the far edge, like a flashlight beam) purely from
@@ -2046,19 +2064,24 @@
       // single outermost, faintest one. No raw SVG gradient defs
       // needed, which would otherwise have to be recomputed by hand
       // every update just to stay aligned as the cone rotates.
-      var fractions = [1.0, 0.66, 0.35];
+      // Index 0 is a dark casing under the outline, index 1 the outlined
+      // cone itself, then the two fading inner bands. The casing plus a
+      // white outline keeps the cone readable over both light and dark imagery.
+      var fractions = [1.0, 1.0, 0.66, 0.35];
       var pointSets = fractions.map(frac => [
         center,
-        destinationPoint(center[0], center[1], heading - VIEWCONE_HALF_ANGLE, VIEWCONE_RADIUS_M * frac),
-        destinationPoint(center[0], center[1], heading + VIEWCONE_HALF_ANGLE, VIEWCONE_RADIUS_M * frac),
+        destinationPoint(center[0], center[1], heading - halfAngle, VIEWCONE_RADIUS_M * frac),
+        destinationPoint(center[0], center[1], heading + halfAngle, VIEWCONE_RADIUS_M * frac),
       ]);
 
       if (viewConeLayer) {
         viewConePolygons.forEach((poly, i) => poly.setLatLngs(pointSets[i]));
       } else {
-        viewConePolygons = pointSets.map((points, i) => L.polygon(points, {
-          color: '#019fc4', weight: i === 0 ? 1 : 0, fillColor: '#019fc4',
-          fillOpacity: 0.22, interactive: false,
+        viewConePolygons = pointSets.map((points, i) => L.polygon(points, i === 0 ? {
+          color: '#0a1428', weight: 4, opacity: 0.6, fill: false, interactive: false,
+        } : {
+          color: '#ffffff', weight: i === 1 ? 2 : 0, opacity: 0.95, fillColor: '#019fc4',
+          fillOpacity: 0.34, interactive: false,
         }));
         viewConeLayer = L.layerGroup(viewConePolygons).addTo(siteMap);
       }
@@ -3135,7 +3158,12 @@
         document.getElementById('pano-right-wrapper').style.visibility = '';
         document.getElementById('autorotate-btn').style.display = '';
         document.getElementById('reset-btn').style.display = '';
-        if (isLocalPreview) document.getElementById('edit-tools-panel').style.display = 'flex';
+        // isLocalPreview is false in tour mode (it excludes ?tour=), so
+        // it can't be used here: check the host directly, same as
+        // renderTourPage does when it first shows the toolbar.
+        if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
+          document.getElementById('edit-tools-panel').style.display = 'flex';
+        }
         // The map is tour-wide (see tourHasMap above), not per-stop,
         // so it's restored directly here rather than left for
         // per-stop loading to handle -- there is no such per-stop
@@ -3145,6 +3173,7 @@
         // loading that runs right after this, for whatever pano
         // comes next -- so it's deliberately left alone here.
         if (tourHasMap) mapToggleBtn.style.display = 'inline-block';
+        flatConeActive = false;
       }
 
       function showFlatStop(sid, config, fallbackLabel) {
@@ -3165,9 +3194,13 @@
         // measures #flat-stop-body's width to decide render resolution, and
         // that's 0 while the container is still display:none.
         document.getElementById('flat-stop-viewer').classList.add('visible');
+        flatStopSid = sid;
+        var isPdfStop = /\.pdf$/i.test(config.file || '');
+        var isLocalHost = (location.hostname === '127.0.0.1' || location.hostname === 'localhost');
+        document.getElementById('flat-stop-rotate-tools').style.display = (isPdfStop && isLocalHost) ? 'inline-flex' : 'none';
         if (/\.pdf$/i.test(config.file || '')) {
           document.getElementById('flat-stop-pdf-link').href = fileUrl;
-          renderFlatPdf(fileUrl);
+          renderFlatPdf(fileUrl, config.rotate);
         } else {
           imgEl.src = fileUrl;
           imgEl.onload = () => { imgEl.style.display = 'block'; wirePanZoom(imgEl.naturalWidth, imgEl.naturalHeight); };
@@ -3188,10 +3221,16 @@
         document.getElementById('autorotate-btn').style.display = 'none';
         document.getElementById('reset-btn').style.display = 'none';
         document.getElementById('edit-tools-panel').style.display = 'none';
-        document.getElementById('map-toggle-btn').style.display = 'none';
         document.getElementById('hotspots-toggle-btn').style.display = 'none';
-        siteMapPanel.style.display = 'none';
-        mapToggleBtn.textContent = 'Show Map';
+        // The map is tour wide, so it stays available for flat stops
+        // (its panel floats above the flat overlay). A flat stop with a
+        // stored heading gets a fixed view cone; without one, no cone.
+        if (tourHasMap) mapToggleBtn.style.display = 'inline-block';
+        flatConeActive = true;
+        currentHeadingOffset = config.heading != null ? config.heading : 0;
+        headingIsKnown = config.heading != null;
+        updateHeadingDialDisplay();
+        updateViewCone();
 
         sceneCache[sid] = { flat: true, config: config, label: label };
       }
@@ -3238,7 +3277,11 @@
       var flatPdfRenderToken = 0;
       var flatPdfDoc = null;    // the currently loaded multi-page PDFDocumentProxy, if any
       var flatPdfPage = 1;      // 1-based, current page within flatPdfDoc
-      function renderFlatPdf(fileUrl) {
+      var flatPdfCurrentExtra = 0; // extra clockwise rotation applied to the page now on screen
+      var flatStopSid = null;      // which flat stop is showing, for saving its rotation
+      var flatPdfForcedRotate = null; // optional per stop override (config.rotate), extra clockwise degrees
+      function renderFlatPdf(fileUrl, forcedRotate) {
+        flatPdfForcedRotate = (forcedRotate === 0 || forcedRotate === 90 || forcedRotate === 180 || forcedRotate === 270) ? forcedRotate : null;
         var myToken = ++flatPdfRenderToken; // stale-response guard if stops are switched quickly
         flatPdfDoc = null;
         flatPdfPage = 1;
@@ -3259,18 +3302,51 @@
         var canvasEl = document.getElementById('flat-stop-canvas');
         return flatPdfDoc.getPage(flatPdfPage).then(page => {
           if (myToken !== flatPdfRenderToken) return;
-          // Plan sheets are routinely authored in portrait with the
-          // drawing itself rotated 90 degrees to fit a portrait-bound
-          // sheet set (meant to be read after physically rotating the
-          // printed page) -- a portrait-shaped page here almost
-          // always means "rotate me," so that's the default. Actual
-          // portrait documents (a memo, a single photo page) are the
-          // exception, not the common case for what this feature is
-          // for (engineering plans), so this errs toward the common
-          // case rather than adding a page-content heuristic that
-          // would be far less reliable than page shape.
+          // Rotation is decided by which way the page's TEXT runs, not
+          // by page shape. Plan sheets are often authored portrait with
+          // the drawing (and its text) turned 90 degrees, and those need
+          // rotating to read; ordinary portrait documents (forms, memos,
+          // reports) have upright text and must stay portrait. So: count
+          // characters running horizontally vs vertically in the page as
+          // displayed, and turn the page by whatever makes the majority
+          // upright. Pages with almost no text (scans, pure drawings)
+          // fall back to the old page shape rule (portrait = rotate).
+          // A stop can override all of this with "rotate": 0/90/180/270
+          // (extra clockwise degrees) in its config.json.
           var base = page.getViewport({ scale: 1 });
-          var rotate = base.width < base.height ? 90 : 0;
+          var extraPromise;
+          if (flatPdfForcedRotate != null) {
+            extraPromise = Promise.resolve(flatPdfForcedRotate);
+          } else {
+            extraPromise = page.getTextContent().then(tc => {
+              var horiz = 0, up = 0, down = 0;
+              tc.items.forEach(item => {
+                var n = (item.str || '').trim().length;
+                if (!n) return;
+                var m = window.pdfjsLib.Util.transform(base.transform, item.transform);
+                if (Math.abs(m[0]) >= Math.abs(m[1])) { horiz += n; }
+                else if (m[1] < 0) { up += n; }   // text runs bottom to top
+                else { down += n; }               // text runs top to bottom
+              });
+              var total = horiz + up + down;
+              var result;
+              if (total < 20) result = base.width < base.height ? 90 : 0; // too little text: old rule
+              else if (horiz >= up && horiz >= down) result = 0;
+              else result = up >= down ? 90 : 270;
+              // Shown in the browser console (F12) to diagnose a PDF that
+              // opens turned the wrong way: characters counted by direction.
+              console.info('flat pdf rotation', { horizontal: horiz, bottomToTop: up, topToBottom: down,
+                                                 pageRotate: base.rotation, extraRotate: result });
+              return result;
+            }).catch(err => {
+              console.warn('flat pdf text check failed, using page shape rule:', err);
+              return base.width < base.height ? 90 : 0;
+            });
+          }
+          return extraPromise.then(extra => {
+          if (myToken !== flatPdfRenderToken) return;
+          flatPdfCurrentExtra = extra;
+          var rotate = (base.rotation + extra) % 360;
           var targetPixelWidth = Math.min(3000, (flatStopBody().clientWidth || 1200) * 2.5);
           var unscaled = page.getViewport({ scale: 1, rotation: rotate });
           var scale = targetPixelWidth / unscaled.width;
@@ -3278,6 +3354,7 @@
           canvasEl.width = viewport.width;
           canvasEl.height = viewport.height;
           return page.render({ canvasContext: canvasEl.getContext('2d'), viewport: viewport }).promise;
+          });
         }).then(() => {
           if (myToken !== flatPdfRenderToken) return;
           canvasEl.style.display = 'block';
@@ -3303,6 +3380,38 @@
       }
       document.getElementById('flat-stop-prev-page').addEventListener('click', () => goToFlatPdfPage(-1));
       document.getElementById('flat-stop-next-page').addEventListener('click', () => goToFlatPdfPage(1));
+
+      // -- rotate tools (local preview only) ----------------------------------
+      // Turns the PDF and writes the choice into that stop's config.json as
+      // "rotate" (extra clockwise degrees), which every later load honours
+      // in place of the automatic check. "Auto" removes the saved value.
+      function saveFlatRotate(value) {
+        var sid = flatStopSid;
+        if (!sid) return;
+        fetch('/__save_flat_rotate', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ site_id: sid, rotate: value }),
+        }).then(res => {
+          if (!res.ok) throw new Error('save failed');
+          var cfg = sceneCache[sid] && sceneCache[sid].config;
+          if (cfg) { if (value == null) delete cfg.rotate; else cfg.rotate = value; }
+        }).catch(err => console.warn('could not save PDF rotation:', err));
+      }
+      function rotateFlatPdf(delta) {
+        if (!flatPdfDoc) return;
+        var next = (((flatPdfCurrentExtra + delta) % 360) + 360) % 360;
+        flatPdfForcedRotate = next;
+        renderFlatPdfPage(flatPdfRenderToken);
+        saveFlatRotate(next);
+      }
+      document.getElementById('flat-stop-rotate-left').addEventListener('click', () => rotateFlatPdf(-90));
+      document.getElementById('flat-stop-rotate-right').addEventListener('click', () => rotateFlatPdf(90));
+      document.getElementById('flat-stop-rotate-auto').addEventListener('click', () => {
+        if (!flatPdfDoc) return;
+        flatPdfForcedRotate = null;
+        renderFlatPdfPage(flatPdfRenderToken);
+        saveFlatRotate(null);
+      });
 
       // -- pan and zoom for the rendered canvas or a plain flat image --------
       function flatStopBody() { return document.getElementById('flat-stop-body'); }

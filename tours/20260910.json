@@ -1,0 +1,48 @@
+{
+  "name": "Site Visit",
+  "sites": [
+    {
+      "site_id": "dji_20260910112423_0016_d",
+      "display_name": "Aerial",
+      "lat": 46.95293088888889,
+      "lng": -122.78053947222222
+    },
+    {
+      "site_id": "img_20260910_104917_00_986",
+      "display_name": "Culvert Inlets",
+      "lat": 46.952882289994655,
+      "lng": -122.78070866996785
+    },
+    {
+      "site_id": "img_20260910_105017_00_987",
+      "display_name": "Culvert Outlets",
+      "lat": 46.952863979985864,
+      "lng": -122.78102517006802
+    },
+    {
+      "site_id": "dji_20260910112203_0008_d",
+      "display_name": "Drone Shot #1",
+      "lat": null,
+      "lng": null
+    },
+    {
+      "site_id": "dji_20260910112209_0010_d",
+      "display_name": "Drone Shot #2",
+      "lat": null,
+      "lng": null
+    }
+  ],
+  "basemap_type": "xyz_tile",
+  "basemap_url": "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+  "overlays": [
+    {
+      "label": "Ortho (9/10/2026)",
+      "url": "https://tiles.arcgis.com/tiles/buuvDFFARQiOEbVZ/arcgis/rest/services/SpurgeonRainierRoad_20260910_ortho/MapServer/tile/{z}/{y}/{x}",
+      "opacity": 1.0,
+      "default_on": true,
+      "type": "tile"
+    }
+  ],
+  "forward_label": "Forward",
+  "backward_label": "Back"
+}

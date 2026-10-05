@@ -263,24 +263,115 @@
     .ctrl-btn:hover { background: #019fc4; color: #0e1b33; }
     .ctrl-btn:active, .ctrl-btn.active { background: #019fc4; color: #0e1b33; border-color: #ffffff; }
 
+    /* -- help card: step by step walkthrough, shown once on a visitor's
+    first open and any time via the Help button. Sits above the tour
+    nav buttons (4001) but below the image lightbox (6000). */
     #info-overlay {
-      display: none; position: fixed; inset: 0; background: rgba(9, 17, 36, 0.75);
-      z-index: 3000; align-items: center; justify-content: center; padding: 20px;
+      display: none; position: fixed; inset: 0; z-index: 5000;
+      background: rgba(9, 17, 36, 0.55);
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center; padding: 20px;
     }
-    #info-overlay.visible { display: flex; }
+    #info-overlay.visible { display: flex; animation: info-fade 0.25s ease-out; }
     #info-panel {
-      background: #132447; border: 1px solid #1b3f95; border-radius: 10px;
-      max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto;
-      padding: 22px 24px; color: #e8eef7; position: relative;
+      background: linear-gradient(180deg, #162a52 0%, #132447 100%);
+      border: 1px solid #1b3f95; border-radius: 14px;
+      width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;
+      padding: 14px 14px 16px; color: #e8eef7; position: relative;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(1, 159, 196, 0.12);
     }
-    #info-panel h2 { font-size: 16px; font-weight: 700; color: #ffffff; margin-bottom: 14px; padding-right: 20px; }
-    #info-list { padding-left: 18px; margin: 0; }
-    #info-list li { margin-bottom: 10px; font-size: 13px; line-height: 1.5; color: #cbd8ec; }
+    #info-overlay.visible #info-panel { animation: info-pop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1); }
+    @keyframes info-fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes info-pop { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: none; } }
+
     #info-close-btn {
-      position: absolute; top: 10px; right: 12px; background: none; border: none;
-      color: #9fb2cc; font-size: 22px; line-height: 1; cursor: pointer; padding: 4px;
+      position: absolute; top: 20px; right: 20px; z-index: 3;
+      width: 28px; height: 28px; border-radius: 50%; border: none;
+      background: rgba(9, 17, 36, 0.6); color: #cbd8ec;
+      font-size: 18px; line-height: 1; cursor: pointer;
     }
-    #info-close-btn:hover { color: #ffffff; }
+    #info-close-btn:hover { background: rgba(9, 17, 36, 0.9); color: #ffffff; }
+
+    #info-stage {
+      height: 124px; border-radius: 10px; overflow: hidden; position: relative;
+      background: linear-gradient(180deg, #1d3566 0%, #0e1b33 100%);
+      border: 1px solid rgba(1, 159, 196, 0.25);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #info-stage > svg { width: 100%; height: 100%; display: block; }
+    #info-content { padding: 14px 8px 0; }
+    #info-step-count {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: #019fc4; margin-bottom: 4px;
+    }
+    #info-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    #info-icon {
+      flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(1, 159, 196, 0.18); border: 1px solid rgba(1, 159, 196, 0.5);
+      display: flex; align-items: center; justify-content: center;
+    }
+    #info-icon svg { width: 17px; height: 17px; stroke: #019fc4; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    #info-title { font-size: 18px; font-weight: 700; color: #ffffff; margin: 0; }
+    #info-step-count .tour-name { color: #ffffff; }
+    .info-intro {
+      margin: 0 0 10px; padding: 9px 12px; border-radius: 8px;
+      background: rgba(1, 159, 196, 0.12); border-left: 3px solid #019fc4;
+      font-size: 13px; line-height: 1.5; color: #e8eef7;
+    }
+    #info-body p { font-size: 13.5px; line-height: 1.55; color: #cbd8ec; margin: 0 0 8px; }
+    #info-body b { color: #ffffff; font-weight: 600; }
+    #info-body.swap { animation: info-swap 0.28s ease-out; }
+    @keyframes info-swap { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+
+    #info-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 8px 0;
+    }
+    #info-dots { display: flex; gap: 7px; }
+    .info-dot {
+      width: 8px; height: 8px; border-radius: 50%; border: none; padding: 0;
+      background: #2c4a86; cursor: pointer; transition: all 0.2s ease;
+    }
+    .info-dot.active { background: #019fc4; width: 22px; border-radius: 4px; }
+    #info-actions { display: flex; gap: 8px; }
+    .info-act {
+      font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+      padding: 8px 16px; border-radius: 6px; border: 1px solid #019fc4;
+      background: transparent; color: #ffffff; transition: all 0.15s ease;
+    }
+    .info-act:hover { background: rgba(1, 159, 196, 0.25); }
+    .info-act.primary { background: #019fc4; color: #0e1b33; }
+    .info-act.primary:hover { background: #2bb8dc; }
+    .info-act[hidden] { display: none; }
+
+    /* illustration pieces */
+    .hp-pan { animation: hp-pan 4.5s ease-in-out infinite; }
+    @keyframes hp-pan { 0%, 100% { transform: translateX(-34px); } 50% { transform: translateX(34px); } }
+    .hp-grow { transform-box: fill-box; transform-origin: 100% 100%; animation: hp-grow 3.6s ease-in-out infinite; }
+    @keyframes hp-grow { 0%, 15% { transform: scale(0.72); } 55%, 80% { transform: scale(1.5); } 100% { transform: scale(0.72); } }
+    .hp-layer-a { animation: hp-layer 3.6s ease-in-out infinite; }
+    @keyframes hp-layer { 0%, 40% { opacity: 0.15; } 60%, 100% { opacity: 0.85; } }
+    .hp-stepper { animation: hp-stepper 5s steps(1, end) infinite; }
+    @keyframes hp-stepper {
+      0% { transform: translateY(0); } 20% { transform: translateY(16px); }
+      40% { transform: translateY(32px); } 60% { transform: translateY(48px); }
+      80% { transform: translateY(64px); } 100% { transform: translateY(0); }
+    }
+    .hp-pulse { animation: hp-pulse 1.8s ease-in-out infinite; }
+    @keyframes hp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+    .hp-spin { transform-box: fill-box; transform-origin: 50% 50%; animation: hp-spin 3s linear infinite; }
+    @keyframes hp-spin { to { transform: rotate(360deg); } }
+    .hp-chips { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 0 12px; }
+    .hp-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #1b3f95; border: 1px solid #019fc4; color: #fff;
+      font-size: 12px; font-weight: 700; padding: 7px 10px; border-radius: 4px;
+    }
+    .hp-chip svg { width: 14px; height: 14px; stroke: #019fc4; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    @media (prefers-reduced-motion: reduce) {
+      #info-overlay.visible, #info-overlay.visible #info-panel, #info-body.swap { animation: none; }
+      .hp-pan, .hp-grow, .hp-layer-a, .hp-stepper, .hp-pulse, .hp-spin { animation: none; }
+    }
 
     #edit-tools-panel {
       position: absolute; top: 60px; right: 12px; z-index: 1000;
@@ -560,6 +651,8 @@
     }
     .tour-stop-link:hover { background: rgba(1, 159, 196, 0.3); }
     .tour-stop-link.active { background: #019fc4; font-weight: bold; }
+    /* Local preview: this stop has hotspot edits not yet written to disk. */
+    .tour-stop-link.unsaved::after { content: ' \25CF'; color: #ffb84d; }
     .tour-sidebar-error { color: #e0a5a5; font-size: 12px; line-height: 1.4; }
 
     /* -- Mobile -- without the viewport meta tag above, none of this
@@ -611,7 +704,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-09-29 10:40:54</div>
+  <div id="build-timestamp">Built 2026-10-05 12:41:56</div>
 
   <div id="status-banner"></div>
 
@@ -674,11 +767,22 @@
       </div>
     </div>
 
-    <div id="info-overlay">
+    <div id="info-overlay" role="dialog" aria-modal="true" aria-labelledby="info-title">
       <div id="info-panel">
         <button id="info-close-btn" type="button" title="Close" aria-label="Close">&times;</button>
-        <h2>Navigating this viewer</h2>
-        <ul id="info-list"></ul>
+        <div id="info-stage"></div>
+        <div id="info-content">
+          <div id="info-step-count"></div>
+          <div id="info-title-row"><span id="info-icon"></span><h2 id="info-title"></h2></div>
+          <div id="info-body"></div>
+        </div>
+        <div id="info-footer">
+          <div id="info-dots"></div>
+          <div id="info-actions">
+            <button id="info-back-btn" class="info-act" type="button">Back</button>
+            <button id="info-next-btn" class="info-act primary" type="button">Next</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1122,54 +1226,255 @@
     document.getElementById('fullscreen-btn').addEventListener('click', () => toggleFullscreen());
     document.getElementById('reset-btn').addEventListener('click', () => resetViews());
 
-    // -- help / info panel ---------------------------------------------
-    // For site visitors, not the local-preview editing tools -- always
-    // visible regardless of isLocalPreview. Built by checking which
-    // control-bar buttons are actually shown/hidden and whether the
-    // curtain-mode class is on the container, all read straight off
-    // the DOM at open-time, rather than needing mode/isCurtainMode
-    // (declared later, inside the per-site config fetch callback) in
-    // scope up here alongside the other control-bar wiring.
+    // -- help / info card ----------------------------------------------
+    // Step cards for site visitors (not the local preview editing tools).
+    // Which steps appear is decided at open time by reading the DOM
+    // (which control bar buttons are shown, curtain mode, whether the
+    // time series strip is in use), so the same text works for every
+    // tour and a step that does not apply to a tour is simply left out.
+    // First visit: opens itself once the imagery has loaded, then a flag
+    // in localStorage keeps it from reappearing. The Help button always
+    // reopens it.
     (function () {
       var overlay = document.getElementById('info-overlay');
-      var list = document.getElementById('info-list');
+      var stageEl = document.getElementById('info-stage');
+      var countEl = document.getElementById('info-step-count');
+      var titleEl = document.getElementById('info-title');
+      var bodyEl = document.getElementById('info-body');
+      var dotsEl = document.getElementById('info-dots');
+      var backBtn = document.getElementById('info-back-btn');
+      var nextBtn = document.getElementById('info-next-btn');
+      var SEEN_KEY = 'viewer_help_seen_v1';
+      var steps = [];
+      var idx = 0;
+
       function isShown(id) {
         var el = document.getElementById(id);
         return !!el && el.style.display !== 'none';
       }
-      function buildTips() {
-        var tips = ['Click and drag to look around. Scroll, or pinch on mobile, to zoom in and out.'];
+      function hasSeen() {
+        try { return localStorage.getItem(SEEN_KEY) === '1'; } catch (e) { return false; }
+      }
+      function markSeen() {
+        try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) { /* private mode, ignore */ }
+      }
+
+      var CHIP_ICONS = {
+        rotate: '<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>',
+        full: '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+        reset: '<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>'
+      };
+
+      var STEP_ICONS = {
+        look: '<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg>',
+        map: '<svg viewBox="0 0 24 24"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
+        stops: '<svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg>',
+        controls: '<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>'
+      };
+
+      var STAGES = {
+        look:
+          '<svg viewBox="0 0 320 124" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+          '<defs><linearGradient id="hpsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a4a86"/><stop offset="1" stop-color="#16294f"/></linearGradient></defs>' +
+          '<rect width="320" height="124" fill="url(#hpsky)"/>' +
+          '<g class="hp-pan">' +
+          '<path d="M-60 90 L-20 52 L10 74 L50 36 L92 80 L130 48 L170 78 L214 40 L252 76 L290 54 L330 84 L380 60 L380 124 L-60 124 Z" fill="#0e1b33" opacity="0.9"/>' +
+          '<path d="M-60 104 L-10 88 L40 100 L100 86 L160 102 L220 88 L280 100 L340 90 L380 98 L380 124 L-60 124 Z" fill="#0a1428"/>' +
+          '</g>' +
+          '<g class="hp-pan" stroke="#019fc4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" transform="translate(160 62)">' +
+          '<circle r="11" fill="rgba(1,159,196,0.25)"/><circle r="3.5" fill="#019fc4" stroke="none"/>' +
+          '<path d="M-24 0 L-18 -5 M-24 0 L-18 5 M24 0 L18 -5 M24 0 L18 5"/>' +
+          '</g></svg>',
+        map:
+          '<svg viewBox="0 0 320 124" preserveAspectRatio="xMidYMid slice" aria-hidden="true">' +
+          '<rect width="320" height="124" fill="#16294f"/>' +
+          '<path d="M0 84 L40 56 L74 76 L116 44 L160 78 L204 52 L246 80 L290 58 L320 74 L320 124 L0 124 Z" fill="#0e1b33" opacity="0.8"/>' +
+          '<g class="hp-grow">' +
+          '<rect x="196" y="58" width="114" height="56" rx="6" fill="#0e1b33" stroke="#019fc4" stroke-width="1.5"/>' +
+          '<rect x="204" y="68" width="98" height="38" rx="3" fill="#1b3f95" opacity="0.5"/>' +
+          '<path d="M206 98 C226 84 240 100 258 86 S290 80 300 74" stroke="#7fd4ea" stroke-width="1.5" fill="none" opacity="0.8"/>' +
+          '<rect class="hp-layer-a" x="214" y="72" width="62" height="26" rx="2" fill="#019fc4"/>' +
+          '<path d="M200 62 h12 M200 62 v12 M203 71 L211 63" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" fill="none"/>' +
+          '<g transform="translate(292 66)" stroke="#ffffff" stroke-width="1.4" fill="none" stroke-linejoin="round">' +
+          '<path d="M0 -4 L6 -1 L0 2 L-6 -1 Z"/><path d="M-6 2 L0 5 L6 2" opacity="0.8"/></g>' +
+          '</g></svg>',
+        stops:
+          '<svg viewBox="0 0 320 124" preserveAspectRatio="xMinYMid slice" aria-hidden="true">' +
+          '<rect width="320" height="124" fill="#16294f"/>' +
+          '<g font-family="-apple-system, Segoe UI, Roboto, sans-serif" font-size="11" font-weight="700">' +
+          '<rect x="14" y="10" width="26" height="24" rx="4" fill="#0e1b33" stroke="#019fc4"/>' +
+          '<path d="M21 17 h12 M21 22 h12 M21 27 h12" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round"/>' +
+          '<rect x="46" y="10" width="54" height="24" rx="4" fill="#0e1b33" stroke="#019fc4"/>' +
+          '<text x="73" y="26" fill="#ffffff" text-anchor="middle">&#8592; Prev</text>' +
+          '<rect class="hp-pulse" x="106" y="10" width="54" height="24" rx="4" fill="#0e1b33" stroke="#019fc4"/>' +
+          '<text x="133" y="26" fill="#ffffff" text-anchor="middle">Next &#8594;</text></g>' +
+          '<rect class="hp-stepper" x="14" y="44" width="170" height="14" rx="3" fill="#019fc4" opacity="0.35"/>' +
+          '<circle cx="28" cy="51" r="3.5" fill="#2c4a86"/><rect x="40" y="49" width="96" height="4" rx="2" fill="#2c4a86"/>' +
+          '<circle cx="28" cy="67" r="3.5" fill="#2c4a86"/><rect x="40" y="65" width="78" height="4" rx="2" fill="#2c4a86"/>' +
+          '<circle cx="28" cy="83" r="3.5" fill="#2c4a86"/><rect x="40" y="81" width="110" height="4" rx="2" fill="#2c4a86"/>' +
+          '<circle cx="28" cy="99" r="3.5" fill="#2c4a86"/><rect x="40" y="97" width="70" height="4" rx="2" fill="#2c4a86"/>' +
+          '<circle cx="28" cy="115" r="3.5" fill="#2c4a86"/><rect x="40" y="113" width="90" height="4" rx="2" fill="#2c4a86"/>' +
+          '<g class="hp-stepper"><circle cx="28" cy="51" r="3.5" fill="#019fc4"/><rect x="40" y="49" width="96" height="4" rx="2" fill="#019fc4"/></g>' +
+          '</svg>',
+        controls:
+          '<div class="hp-chips">' +
+          '<span class="hp-chip"><span class="hp-spin" style="display:inline-flex;">' + CHIP_ICONS.rotate + '</span>Auto-Rotate</span>' +
+          '<span class="hp-chip">' + CHIP_ICONS.full + 'Full Screen</span>' +
+          '<span class="hp-chip">' + CHIP_ICONS.reset + 'Reset View</span>' +
+          '</div>'
+      };
+
+      function buildSteps() {
+        var out = [];
+
+        var look = ['<p>Click and drag to pan around the scene. Scroll, or pinch on mobile, to zoom in and out.</p>'];
         if (container.classList.contains('curtain-mode')) {
-          tips.push('Drag the divider in the middle left or right to compare the two photos.');
+          look.push('<p>Drag the divider in the middle left or right to compare the two photos.</p>');
         } else if (isShown('toggle-btn')) {
-          tips.push('Use the Toggle button to switch between the two photos.');
+          look.push('<p>Use <b>Toggle</b> to switch between the two photos.</p>');
         } else if (!document.getElementById('pano-right-wrapper').classList.contains('hidden')) {
-          tips.push('The two photos are shown side by side for comparison.');
+          look.push('<p>The two photos are shown side by side for comparison.</p>');
         }
-        if (isShown('map-toggle-btn')) tips.push('Show Map displays this location on a map.');
+        var strip = document.getElementById('timeseries-strip');
+        if (strip && strip.style.display !== 'none' && strip.children.length > 1) {
+          look.push('<p>The thumbnails along the bottom switch between photos taken on different dates.</p>');
+        }
         if (isShown('hotspots-toggle-btn')) {
-          tips.push('Colored pins in the photo are hotspots -- click one for more detail. Hide/Show Hotspots toggles them.');
+          look.push('<p>Colored pins in the photo are hotspots. Click one for more detail, or use <b>Hide Hotspots</b> and <b>Show Hotspots</b> to clear them from the view and bring them back.</p>');
         }
-        tips.push('Auto-Rotate slowly pans the view on its own. Full Screen expands the viewer. Reset View returns to the starting position.');
-        if (isShown('prev-stop-btn')) tips.push('Use Prev / Next to move between stops on this tour.');
-        return tips;
-      }
-      function openInfo() {
-        list.innerHTML = '';
-        buildTips().forEach(t => {
-          var li = document.createElement('li');
-          li.textContent = t;
-          list.appendChild(li);
+        var intro = (window.helpTourIntro || '');
+        if (intro) look.unshift('<p class="info-intro"></p>');
+        out.push({ title: 'Look around', icon: STEP_ICONS.look, stage: STAGES.look, body: look.join(''), intro: intro });
+
+        if (isShown('map-toggle-btn')) {
+          out.push({
+            title: 'Explore the map',
+            icon: STEP_ICONS.map,
+            stage: STAGES.map,
+            body:
+              '<p><b>Show Map</b> opens an inset map of this location.</p>' +
+              '<p>Use the layers control on the map to switch between orthoimagery from different dates and, where available, project design elements.</p>' +
+              '<p><b>Resize it:</b> drag the grip in the map\u2019s top left corner to make the map larger or smaller.</p>'
+          });
+        }
+
+        if (isShown('prev-stop-btn')) {
+          out.push({
+            title: 'Move between stops',
+            icon: STEP_ICONS.stops,
+            stage: STAGES.stops,
+            body:
+              '<p>Use <b>Prev</b> and <b>Next</b> at the top left to step through the tour in order.</p>' +
+              '<p>The menu button beside them lists every stop, so you can jump straight to any one.</p>'
+          });
+        }
+
+        out.push({
+          title: 'Viewer controls',
+          icon: STEP_ICONS.controls,
+          stage: STAGES.controls,
+          body:
+            '<p>On stops with hotspots, <b>Hide Hotspots</b> and <b>Show Hotspots</b> turn the colored pins off and on.</p>' +
+            '<p><b>Auto-Rotate</b> slowly pans the view on its own. <b>Full Screen</b> expands the viewer. <b>Reset View</b> returns to the starting position.</p>' +
+            '<p>On a phone these live under the \u22EE menu. Reopen this guide any time with <b>Help</b>.</p>'
         });
-        overlay.classList.add('visible');
+        return out;
       }
-      function closeInfo() { overlay.classList.remove('visible'); }
+
+      function renderStep(animate) {
+        var s = steps[idx];
+        stageEl.innerHTML = s.stage;
+        countEl.textContent = '';
+        if (window.helpTourName) {
+          var nm = document.createElement('span');
+          nm.className = 'tour-name';
+          nm.textContent = window.helpTourName;
+          countEl.appendChild(nm);
+          countEl.appendChild(document.createTextNode(' \u00B7 '));
+        }
+        countEl.appendChild(document.createTextNode('Step ' + (idx + 1) + ' of ' + steps.length));
+        document.getElementById('info-icon').innerHTML = s.icon || '';
+        titleEl.textContent = s.title;
+        bodyEl.innerHTML = s.body;
+        var introEl = bodyEl.querySelector('.info-intro');
+        if (introEl) introEl.textContent = s.intro;
+        bodyEl.classList.remove('swap');
+        if (animate) { void bodyEl.offsetWidth; bodyEl.classList.add('swap'); }
+        Array.from(dotsEl.children).forEach(function (d, i) { d.classList.toggle('active', i === idx); });
+        backBtn.hidden = idx === 0;
+        nextBtn.textContent = idx === steps.length - 1 ? 'Got it' : 'Next';
+      }
+      function goTo(i, animate) {
+        idx = Math.max(0, Math.min(steps.length - 1, i));
+        renderStep(animate);
+      }
+
+      function openInfo() {
+        steps = buildSteps();
+        dotsEl.innerHTML = '';
+        steps.forEach(function (_, i) {
+          var d = document.createElement('button');
+          d.type = 'button';
+          d.className = 'info-dot';
+          d.setAttribute('aria-label', 'Go to step ' + (i + 1));
+          d.addEventListener('click', function () { goTo(i, true); });
+          dotsEl.appendChild(d);
+        });
+        idx = 0;
+        renderStep(false);
+        overlay.classList.add('visible');
+        nextBtn.focus();
+      }
+      function closeInfo() {
+        overlay.classList.remove('visible');
+        markSeen();
+      }
+      function isOpen() { return overlay.classList.contains('visible'); }
+
+      nextBtn.addEventListener('click', function () {
+        if (idx >= steps.length - 1) closeInfo(); else goTo(idx + 1, true);
+      });
+      backBtn.addEventListener('click', function () { goTo(idx - 1, true); });
       document.getElementById('info-btn').addEventListener('click', openInfo);
       document.getElementById('info-close-btn').addEventListener('click', closeInfo);
-      overlay.addEventListener('click', (e) => { if (e.target === overlay) closeInfo(); });
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && overlay.classList.contains('visible')) closeInfo();
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) closeInfo(); });
+      document.addEventListener('keydown', function (e) {
+        if (!isOpen()) return;
+        if (e.key === 'Escape') closeInfo();
+        else if (e.key === 'ArrowRight' && idx < steps.length - 1) goTo(idx + 1, true);
+        else if (e.key === 'ArrowLeft' && idx > 0) goTo(idx - 1, true);
       });
+
+      // Swipe left or right on the card to change steps on touch screens.
+      var touchX = null;
+      document.getElementById('info-panel').addEventListener('touchstart', function (e) {
+        touchX = e.touches[0] ? e.touches[0].clientX : null;
+      }, { passive: true });
+      document.getElementById('info-panel').addEventListener('touchend', function (e) {
+        if (touchX === null || !e.changedTouches[0]) return;
+        var dx = e.changedTouches[0].clientX - touchX;
+        touchX = null;
+        if (Math.abs(dx) < 50) return;
+        if (dx < 0 && idx < steps.length - 1) goTo(idx + 1, true);
+        else if (dx > 0 && idx > 0) goTo(idx - 1, true);
+      }, { passive: true });
+
+      // First visit: wait for the first pano to finish loading (the
+      // control bar buttons are set up by then), with a hard cap so a
+      // slow or failed load never blocks the guide. Skipped in the local
+      // editing preview.
+      if (!hasSeen() && !isLocalPreview) {
+        var waited = 0;
+        var timer = setInterval(function () {
+          waited += 400;
+          var loading = document.getElementById('pano-loading-left');
+          var ready = loading && loading.classList.contains('hidden');
+          if (ready || waited >= 10000) {
+            clearInterval(timer);
+            setTimeout(function () { if (!isOpen() && !hasSeen()) openInfo(); }, 700);
+          }
+        }, 400);
+      }
     })();
 
     if (!tourParam) {
@@ -1783,6 +2088,7 @@
         spot.yaw = coords.yaw;
         spot.pitch = coords.pitch;
         ctx.hotspotObj.setPosition({ yaw: coords.yaw, pitch: coords.pitch });
+        markHotspotsDirty(ctx.slotId);
       });
 
       window.addEventListener('mouseup', () => {
@@ -2016,10 +2322,12 @@
           snapped++;
         });
         if (snapped) {
+          var snapSid = activeTourSiteId;
+          markHotspotsDirty(snapSid);
           fetch('/__save_hotspots', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ site_id: activeTourSiteId, slots: { '1': pendingSlotHotspots[slotId] || [] } }),
-          });
+            body: JSON.stringify({ site_id: snapSid, slots: { '1': pendingSlotHotspots[slotId] || [] } }),
+          }).then(res => { if (res.ok) markHotspotsClean(snapSid); }).catch(() => {});
         }
         btn.textContent = 'Calibrated! Snapped ' + snapped + ' pin(s)';
         setTimeout(() => { btn.textContent = original; }, 2200);
@@ -2407,6 +2715,31 @@
     var editingHotspots = false;
     var placingHotspot = false;
     var pendingSlotHotspots = {};
+    // Tour mode only: which stops (keyed by site id, same as
+    // pendingSlotHotspots) have hotspot edits not yet saved. Save Hotspots
+    // writes exactly these stops, and the sidebar marks them.
+    var dirtyHotspotSlots = {};
+    function markHotspotsDirty(slotId) {
+      if (!tourParam || !slotId || dirtyHotspotSlots[slotId]) return;
+      dirtyHotspotSlots[slotId] = true;
+      var el = document.querySelector('.tour-stop-link[data-site-id="' + slotId + '"]');
+      if (el) el.classList.add('unsaved');
+      updateSaveHotspotsLabel();
+    }
+    function markHotspotsClean(slotId) {
+      if (!dirtyHotspotSlots[slotId]) return;
+      delete dirtyHotspotSlots[slotId];
+      var el = document.querySelector('.tour-stop-link[data-site-id="' + slotId + '"]');
+      if (el) el.classList.remove('unsaved');
+      updateSaveHotspotsLabel();
+    }
+    function updateSaveHotspotsLabel() {
+      var n = Object.keys(dirtyHotspotSlots).length;
+      saveHotspotsBtn.textContent = n > 1 ? 'Save Hotspots (' + n + ' stops)' : 'Save Hotspots';
+    }
+    window.addEventListener('beforeunload', (e) => {
+      if (Object.keys(dirtyHotspotSlots).length) { e.preventDefault(); e.returnValue = ''; }
+    });
     var lastUsedCategory = 'note'; // sticky across pins placed this session
     // spot object -> { ctx, pin } for existing hotspots, so the list
     // panel's Edit button can reuse the exact same edit-form code path
@@ -2570,20 +2903,39 @@
     });
 
     saveHotspotsBtn.addEventListener('click', () => {
-      var original = saveHotspotsBtn.textContent;
-      var payloadSiteId, payloadSlots;
+      var restoreLabel = () => { updateSaveHotspotsLabel(); };
       if (tourParam) {
         if (!activeTourSiteId) return;
-        payloadSiteId = activeTourSiteId;
-        payloadSlots = { '1': pendingSlotHotspots[activeTourSiteId] || [] };
-      } else {
-        payloadSiteId = siteId;
-        payloadSlots = pendingSlotHotspots;
+        // Every stop with unsaved edits, plus the stop on screen (saved
+        // even if nothing flagged it, as this button always did).
+        var ids = Object.keys(dirtyHotspotSlots);
+        if (ids.indexOf(activeTourSiteId) === -1) ids.push(activeTourSiteId);
+        Promise.all(ids.map(sid =>
+          fetch('/__save_hotspots', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ site_id: sid, slots: { '1': pendingSlotHotspots[sid] || [] } }),
+          }).then(res => ({ sid: sid, ok: res.ok })).catch(() => ({ sid: sid, ok: false, unreachable: true }))
+        )).then(results => {
+          var okList = results.filter(r => r.ok), failed = results.filter(r => !r.ok);
+          okList.forEach(r => markHotspotsClean(r.sid));
+          if (failed.length) {
+            saveHotspotsBtn.textContent = failed.some(r => r.unreachable)
+                ? 'Preview server not reachable'
+                : 'Failed on ' + failed.length + ' stop' + (failed.length > 1 ? 's' : '') + ', try again';
+            setTimeout(restoreLabel, 2200);
+          } else {
+            saveHotspotsBtn.textContent = okList.length > 1 ? 'Saved ' + okList.length + ' stops!' : 'Saved!';
+            setTimeout(restoreLabel, 1400);
+          }
+        });
+        return;
       }
+      var original = saveHotspotsBtn.textContent;
       fetch('/__save_hotspots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site_id: payloadSiteId, slots: payloadSlots }),
+        body: JSON.stringify({ site_id: siteId, slots: pendingSlotHotspots }),
       }).then(res => {
         saveHotspotsBtn.textContent = res.ok ? 'Saved!' : 'Failed, try again';
         setTimeout(() => { saveHotspotsBtn.textContent = original; }, 1400);
@@ -2963,10 +3315,12 @@
             snapped++;
           });
           if (snapped) {
+            var snapSid2 = activeTourSiteId;
+            markHotspotsDirty(snapSid2);
             fetch('/__save_hotspots', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ site_id: activeTourSiteId, slots: { '1': pendingSlotHotspots[activeTourSiteId] || [] } }),
-            });
+              body: JSON.stringify({ site_id: snapSid2, slots: { '1': pendingSlotHotspots[snapSid2] || [] } }),
+            }).then(res => { if (res.ok) markHotspotsClean(snapSid2); }).catch(() => {});
           }
           calibrateBtn.textContent = snapped ? ('Calibrated! Snapped ' + snapped + ' other pin(s)') : 'Calibrated!';
           setTimeout(() => { calibrateBtn.textContent = original; }, 2200);
@@ -3000,6 +3354,7 @@
           pin.el.className = 'hotspot-pin hotspot-cat-' + spot.category + pinStyleClass(spot);
           applyLinkHotspotIcon(pin.el, spot);
           updateHotspotTooltipBody(pin.body, spot);
+          markHotspotsDirty(ctx.slotId);
           close();
           refreshHotspotList();
         }
@@ -3032,6 +3387,7 @@
           if (idx !== -1) arr.splice(idx, 1);
         }
         hotspotUiMap.delete(spot);
+        markHotspotsDirty(ctx.slotId);
         close();
         refreshHotspotList();
       });
@@ -3045,6 +3401,7 @@
         var spot = Object.assign({ yaw: coords.yaw, pitch: coords.pitch }, spotInfo);
         if (!pendingSlotHotspots[slotId]) pendingSlotHotspots[slotId] = [];
         pendingSlotHotspots[slotId].push(spot);
+        markHotspotsDirty(slotId);
         var pin = buildHotspotPin(spot);
         var hotspotObj = scene.hotspotContainer().createHotspot(pin.el, { yaw: spot.yaw, pitch: spot.pitch });
         wireHotspotInteractions(pin, spot, {
@@ -3643,6 +4000,8 @@
           titleEl.textContent = manifest.name || tourId;
           document.title = manifest.name || tourId;
           tourNameForTitle = manifest.name || tourId;
+          window.helpTourName = manifest.name || tourId;
+          window.helpTourIntro = (manifest.intro_note || '').toString().trim();
           var sites = manifest.sites || [];
           tourSiteOptions = sites;
 
@@ -3669,6 +4028,7 @@
             var label = s.display_name || s.site_id;
             link.textContent = label;
             var sidKey = s.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_');
+            link.setAttribute('data-site-id', sidKey);
             siteLinkElements[sidKey] = link;
             link.addEventListener('click', () => loadStop(s.site_id));
             listEl.appendChild(link);

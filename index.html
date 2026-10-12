@@ -224,7 +224,7 @@
       background-repeat: no-repeat;
     }
 
-    #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn {
+    #site-map-fit-btn, #site-map-basemap-btn, #site-map-zoomto-btn, #site-map-follow-btn {
       position: absolute; z-index: 1600; top: 8px;
       width: 30px; height: 30px; border-radius: 4px; border: 2px solid rgba(0,0,0,0.2);
       background: #fff; color: #333; font-size: 15px; line-height: 1;
@@ -232,8 +232,11 @@
     }
     #site-map-fit-btn { right: 8px; }
     #site-map-zoomto-btn { right: 44px; }
+    #site-map-follow-btn { right: 116px; font-size: 17px; }
+    #site-map-follow-btn.armed { background: #019fc4; color: #fff; border-color: #019fc4; }
     #site-map-basemap-btn { right: 80px; font-size: 16px; display: none; }
-    #site-map-fit-btn:hover, #site-map-basemap-btn:hover, #site-map-zoomto-btn:hover { background: #f4f4f4; }
+    #site-map-fit-btn:hover, #site-map-basemap-btn:hover, #site-map-zoomto-btn:hover, #site-map-follow-btn:hover { background: #f4f4f4; }
+    #site-map-follow-btn.armed:hover { background: #019fc4; }
     /* Leaflet's own layers control (added for overlays -- see
     ensureMapInitialized) defaults to the same top-right corner as the
     fit/zoom/basemap buttons above, sitting directly behind them.
@@ -652,6 +655,25 @@
     .tour-stop-link:hover { background: rgba(1, 159, 196, 0.3); }
     .tour-stop-link.active { background: #019fc4; font-weight: bold; }
     /* Local preview: this stop has hotspot edits not yet written to disk. */
+    .leaflet-popup-content-wrapper { background: #132447; color: #e8eef7; border: 1px solid #1b3f95;
+      border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.45); }
+    .leaflet-popup-tip { background: #132447; border: 1px solid #1b3f95; }
+    .leaflet-popup-content { margin: 10px 14px; font-size: 12px; line-height: 1.45; }
+    .leaflet-container a.leaflet-popup-close-button { color: #9fb2cc; }
+    .overlay-popup-title { font-weight: 700; color: #fff; margin-bottom: 4px; font-size: 13px; }
+    .overlay-popup table td { padding: 1px 0; vertical-align: top; }
+    .overlay-popup table td:first-child { color: #9fb2cc; padding-right: 12px; white-space: nowrap; }
+    .esri-pt { background: none; border: none; display: flex; align-items: center; justify-content: center; }
+    .esri-label { background: none; border: none; box-shadow: none; padding: 0; font-weight: 600; font-size: 12px; }
+    .esri-label::before { display: none; }
+    body.hdg-local .tour-stop-link.hdg-done::before { content: '\2713 '; color: #7CFC9A; font-weight: bold; }
+    #hdg-fast { margin-top: 10px; border-top: 1px solid rgba(179,102,255,0.35); padding-top: 8px; }
+    #hdg-fast button { display: block; width: 100%; margin-bottom: 6px; }
+    #hdg-fast label { color: #d9b3ff; font-size: 12px; display: block; margin-bottom: 6px; cursor: pointer; }
+    #hdg-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.15); overflow: hidden; margin-bottom: 8px; }
+    #hdg-bar-fill { height: 100%; width: 0%; background: #7CFC9A; transition: width 0.25s ease; }
+    #hdg-progress { color: #b9a3d9; font-size: 11px; margin-bottom: 6px; }
+    #hdg-keys { color: #b9a3d9; font-size: 10.5px; line-height: 1.4; margin-top: 4px; }
     .tour-stop-link.unsaved::after { content: ' \25CF'; color: #ffb84d; }
     .tour-sidebar-error { color: #e0a5a5; font-size: 12px; line-height: 1.4; }
 
@@ -704,7 +726,7 @@
 </head>
 <body>
 
-  <div id="build-timestamp">Built 2026-10-05 15:16:01</div>
+  <div id="build-timestamp">Built 2026-10-12 15:17:22</div>
 
   <div id="status-banner"></div>
 
@@ -795,6 +817,7 @@
       <button id="site-map-fit-btn" type="button" title="Zoom to fit all points">&#10021;</button>
       <button id="site-map-zoomto-btn" type="button" title="Zoom to point (click, then click the map)">&#8982;</button>
       <button id="site-map-basemap-btn" type="button" title="Toggle basemap">&#128506;</button>
+      <button id="site-map-follow-btn" type="button" title="Zoom the map to each stop when it is selected (click to turn on or off)">&#9678;</button>
     </div>
 
     <div id="edit-tools-panel" style="display:none;">
@@ -823,6 +846,16 @@
           <button id="heading-plus5" type="button">+5</button>
         </div>
         <button id="save-heading-btn" class="edit-tool-btn" type="button">Save Heading</button>
+        <div id="hdg-fast">
+          <div id="hdg-progress"></div>
+          <div id="hdg-bar"><div id="hdg-bar-fill"></div></div>
+          <button id="hdg-map-btn" class="edit-tool-btn" type="button">Aim at Map Point (M)</button>
+          <button id="hdg-aim-btn" class="edit-tool-btn" type="button">Aim at Next Stop (A)</button>
+          <button id="hdg-saveadv-btn" class="edit-tool-btn" type="button">Save Dial Heading (Enter)</button>
+          <button id="hdg-nextunset-btn" class="edit-tool-btn" type="button">Jump to Next Unset Stop (U)</button>
+          <label><input type="checkbox" id="hdg-autoadv" checked> Auto jump to next stop after saving</label>
+          <div id="hdg-keys">Center a landmark in the photo, press M, click that landmark on the map. Each of these saves the heading and shows the cone. [ ] nudge 1, { } nudge 5 (then Enter). Esc cancels.</div>
+        </div>
         <div id="heading-calibrate-list"></div>
       </div>
     </div>
@@ -838,6 +871,31 @@
     var tourLoadStopFn = null; // set inside renderTourPage; lets a "link" hotspot
                                 // jump to another stop in the current tour, in place,
                                 // the same way the sidebar does.
+    // Locations only: which photo (index) of a location the stop on screen
+    // is showing, so saves land on that photo; and the shared links a photo
+    // has no heading for yet, so the aim-and-click calibration can list them.
+    var locPhotoBySite = {};
+    var unplacedBySite = {};
+    function locPhotoFor(sid) {
+      return (sid != null && locPhotoBySite[sid] != null) ? locPhotoBySite[sid] : null;
+    }
+    var locSlotsBySite = {}; // compare views: hotspot slot '1'/'2' -> photo index
+    var locTsBySite = {};    // dates view: slots are positions in the date ordered strip
+    function locSlotsFor(sid) { return locSlotsBySite[sid] || null; }
+    // For "Use This View": 0 is the left photo, 1 the right one.
+    function locPhotoForSlotIndex(sid, idx) {
+      var slots = locSlotsBySite[sid];
+      if (slots) return locTsBySite[sid] ? slots[String(idx)] : slots[idx === 0 ? '1' : '2'];
+      return locPhotoFor(sid);
+    }
+    var tourReloadStopFn = function () {}; // real implementation assigned inside renderTourPage
+    // After a heading is saved on a photo whose shared links were waiting for
+    // it, rebuild the stop so those links appear. Delayed a moment so the
+    // calibration's own follow up save finishes first.
+    function reloadStopIfLinksWaiting(sid) {
+      if (!(unplacedBySite[sid] || []).length) return;
+      setTimeout(function () { tourReloadStopFn(sid); }, 900);
+    }
     var syncSceneCacheHeading = function () {}; // real implementation assigned inside
                                                  // renderTourPage, where sceneCache actually
                                                  // lives -- a no-op until then so calling it
@@ -866,7 +924,7 @@
       fetch('/__save_view', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site_id: targetSiteId, yaw: yawDeg, pitch: pitchDeg, photo_index: photoIndex }),
+        body: JSON.stringify({ site_id: targetSiteId, yaw: yawDeg, pitch: pitchDeg, photo_index: photoIndex, loc_photo: locPhotoForSlotIndex(targetSiteId, photoIndex) }),
       }).then(res => {
         useViewBtn.textContent = res.ok ? 'Captured!' : 'Failed, try again';
         setTimeout(() => { useViewBtn.textContent = original; }, 1400);
@@ -1031,13 +1089,17 @@
       });
     }
 
-    // A Link hotspot's icon is an explicit per-pin choice (the Icon
-    // field in the hotspot form, saved as spot.link_icon), not
-    // inferred from the target site -- so applying it is just a class
-    // toggle, no fetch needed.
+    // A Link hotspot's icon comes from the Icon field in the hotspot
+    // form (spot.link_icon). "Overview" and an explicit "Aerial" are
+    // always honored. A link left on the default ("ground" or unset)
+    // switches to the airplane by itself when its target stop is a
+    // drone photo, as flagged in the tour manifest, so existing links
+    // pick it up without being edited. Only known inside a tour.
     function applyLinkHotspotIcon(el, spot) {
       var isLink = spot.category === 'link';
-      el.classList.toggle('hotspot-link-aerial', isLink && spot.link_icon === 'aerial');
+      var autoAerial = isLink && spot.target && (!spot.link_icon || spot.link_icon === 'ground') &&
+                       isAerialSite(spot.target);
+      el.classList.toggle('hotspot-link-aerial', isLink && (spot.link_icon === 'aerial' || !!autoAerial));
       el.classList.toggle('hotspot-link-overview', isLink && spot.link_icon === 'overview');
     }
 
@@ -1354,6 +1416,9 @@
             body:
               '<p><b>Show Map</b> opens an inset map of this location.</p>' +
               '<p>Use the layers control on the map to switch between orthoimagery from different dates and, where available, project design elements.</p>' +
+              (isShown('prev-stop-btn')
+                ? '<p>Picking a stop zooms the map in to it. <b>\u25CE</b> turns that on or off, and <b>\u2725</b> zooms back out to the whole site.</p>'
+                : '') +
               '<p><b>Resize it:</b> drag the grip in the map\u2019s top left corner to make the map larger or smaller.</p>'
           });
         }
@@ -1484,13 +1549,24 @@
         throw new Error('missing-config');
       })
       .then(config => {
+        config = normalizeLocationConfig(config, null, false, {
+          view: urlParams.get('view'), a: urlParams.get('a'), b: urlParams.get('b'),
+        });
+        if (config._location && config._photoIndex != null) {
+          locPhotoBySite[siteId] = config._photoIndex;
+          unplacedBySite[siteId] = config._unplacedLinks || [];
+        }
+        if (config._location) hideLinksInComparison = true;
+        if (config._locSlots) locSlotsBySite[siteId] = config._locSlots;
+        if (config._locTs) locTsBySite[siteId] = true;
+        if (config._locDates && config._locDates.length >= 2) buildLocationToolbar(config);
         const mode = config.mode || 'single';
         siteDefaultPinStyle = config.pin_style === 'label' ? 'label' : 'dot';
         currentHeadingOffset = config.heading_offset || 0;
         headingIsKnown = config.heading_offset != null;
         updateHeadingDialDisplay();
 
-        var pageTitle = config.label_1 ||
+        var pageTitle = config._locName || config.label_1 ||
             (config.photos && config.photos[0] && config.photos[0].label) || rawSiteId;
         document.title = pageTitle;
 
@@ -1508,23 +1584,26 @@
           wrapperR.classList.add('hidden');
           document.getElementById('label-right').style.display = 'none';
 
-          const isTiledTs = config.format === 'tiled';
+          const isTiledTs = config.format === 'tiled'; // fallback; each photo may override (locations)
           const defaultLevelsTs = [{ tileSize: 256, size: 256, fallbackOnly: true }, { tileSize: 512, size: 512 }, { tileSize: 512, size: 1024 }, { tileSize: 512, size: 2048 }];
           tsPhotos = config.photos || [];
           var strip = document.getElementById('timeseries-strip');
           strip.style.display = 'flex';
+          var tsStart = config._locStart || 0;
+          tsActiveIdx = tsStart;
 
           tsPhotos.forEach((p, idx) => {
             var view = new Marzipano.RectilinearView({ yaw: p.yaw || 0, pitch: p.pitch || 0, fov: Math.PI / 4 }, limiter);
             var geometry, source, thumbUrl;
-            if (isTiledTs) {
+            if ((p.format || (isTiledTs ? 'tiled' : 'raw')) === 'tiled') {
               geometry = new Marzipano.CubeGeometry((p.levels && p.levels.length) ? p.levels : defaultLevelsTs);
-              source = Marzipano.ImageUrlSource.fromString('tiles/' + siteId + '/img' + (idx + 1) + '/scene/{z}/{f}/{y}/{x}.jpg');
-              thumbUrl = 'tiles/' + siteId + '/img' + (idx + 1) + '/scene/1/f/0/0.jpg';
+              var tsImg = p._img || ('img' + (idx + 1));
+              source = Marzipano.ImageUrlSource.fromString('tiles/' + siteId + '/' + tsImg + '/scene/{z}/{f}/{y}/{x}.jpg');
+              thumbUrl = 'tiles/' + siteId + '/' + tsImg + '/scene/1/f/0/0.jpg';
               tsRawUrls.push(null);
             } else {
               geometry = new Marzipano.EquirectGeometry([{ width: rawEquirectWidth(p.mobile) }]);
-              var tsFullUrl = 'tiles/' + siteId + '/img' + (idx + 1) + '.jpg';
+              var tsFullUrl = 'tiles/' + siteId + '/' + (p._img || ('img' + (idx + 1))) + '.jpg';
               var tsImgUrl = rawImageUrl(tsFullUrl, p.mobile);
               source = Marzipano.ImageUrlSource.fromString(tsImgUrl);
               thumbUrl = tsFullUrl;
@@ -1537,7 +1616,7 @@
             tsViews.push(view);
 
             var el = document.createElement('div');
-            el.className = 'ts-thumb' + (idx === 0 ? ' active' : '');
+            el.className = 'ts-thumb' + (idx === tsStart ? ' active' : '');
             el.style.backgroundImage = "url('" + thumbUrl + "')";
             var lbl = document.createElement('div');
             lbl.className = 'ts-thumb-label';
@@ -1548,13 +1627,13 @@
           });
 
           if (tsScenes.length) {
-            if (tsRawUrls[0]) {
-              preloadPanoThenRun(tsRawUrls[0], 'left', function () { tsScenes[0].switchTo(); });
+            if (tsRawUrls[tsStart]) {
+              preloadPanoThenRun(tsRawUrls[tsStart], 'left', function () { tsScenes[tsStart].switchTo(); });
             } else {
               document.getElementById('pano-loading-left').classList.add('hidden');
-              tsScenes[0].switchTo();
+              tsScenes[tsStart].switchTo();
             }
-            document.getElementById('label-left').innerText = (tsPhotos[0] && tsPhotos[0].label) || 'Photo 1';
+            document.getElementById('label-left').innerText = (tsPhotos[tsStart] && tsPhotos[tsStart].label) || ('Photo ' + (tsStart + 1));
           }
 
           useViewBtn.addEventListener('click', () => {
@@ -1601,27 +1680,37 @@
 
         var geometryL, geometryR, sourceL, sourceR;
         var defaultLevels = [{ tileSize: 256, size: 256, fallbackOnly: true }, { tileSize: 512, size: 512 }, { tileSize: 512, size: 1024 }, { tileSize: 512, size: 2048 }];
+        // Each side is tiled or raw on its own, since two dates of one
+        // location can be stored differently. Older sites set one format
+        // for both and have no format_1/format_2.
+        var isTiledL = (config.format_1 || config.format) === 'tiled';
+        var isTiledR = (config.format_2 || config.format) === 'tiled';
+        var imgNameL = config._imgNameL || config._imgName || 'img1';
+        var imgNameR = config._imgNameR || 'img2';
 
-        if (isTiled) {
+        if (isTiledL) {
           geometryL = new Marzipano.CubeGeometry(
               (config.levels_1 && config.levels_1.length) ? config.levels_1 : defaultLevels);
-          sourceL = Marzipano.ImageUrlSource.fromString('tiles/' + siteId + '/img1/scene/{z}/{f}/{y}/{x}.jpg');
-          if (!isSingleMode) {
-            geometryR = new Marzipano.CubeGeometry(
-                (config.levels_2 && config.levels_2.length) ? config.levels_2 : defaultLevels);
-            sourceR = Marzipano.ImageUrlSource.fromString('tiles/' + siteId + '/img2/scene/{z}/{f}/{y}/{x}.jpg');
-          }
+          sourceL = Marzipano.ImageUrlSource.fromString('tiles/' + siteId + '/' + imgNameL + '/scene/{z}/{f}/{y}/{x}.jpg');
           // Tiled scenes load many small tiles progressively -- there's
           // no single big payload to wait on, so no blocking spinner.
           document.getElementById('pano-loading-left').classList.add('hidden');
         } else {
           geometryL = new Marzipano.EquirectGeometry([{ width: rawEquirectWidth(config.mobile_1) }]);
-          geometryR = geometryL;
-          var img1Url = rawImageUrl('tiles/' + siteId + '/img1.jpg', config.mobile_1);
+          var img1Url = rawImageUrl('tiles/' + siteId + '/' + imgNameL + '.jpg', config.mobile_1);
           sourceL = Marzipano.ImageUrlSource.fromString(img1Url);
           preloadPanoThenRun(img1Url, 'left', function () {});
-          if (!isSingleMode) {
-            var img2Url = rawImageUrl('tiles/' + siteId + '/img2.jpg', config.mobile_2);
+        }
+        if (!isSingleMode) {
+          if (isTiledR) {
+            geometryR = new Marzipano.CubeGeometry(
+                (config.levels_2 && config.levels_2.length) ? config.levels_2 : defaultLevels);
+            sourceR = Marzipano.ImageUrlSource.fromString('tiles/' + siteId + '/' + imgNameR + '/scene/{z}/{f}/{y}/{x}.jpg');
+            var loadingR = document.getElementById('pano-loading-right');
+            if (loadingR) loadingR.classList.add('hidden');
+          } else {
+            geometryR = new Marzipano.EquirectGeometry([{ width: rawEquirectWidth(config.mobile_2 || config.mobile_1) }]);
+            var img2Url = rawImageUrl('tiles/' + siteId + '/' + imgNameR + '.jpg', config.mobile_2);
             sourceR = Marzipano.ImageUrlSource.fromString(img2Url);
             preloadPanoThenRun(img2Url, 'right', function () {});
           }
@@ -2169,7 +2258,21 @@
     // degradation as the esri-leaflet basemap support already has).
     var markerClusterGroup = null;
 
-    function buildMarkerIcon(active) {
+    // Airplane glyph (Material "flight", 24 unit box) marking drone photos
+    // in the stop list and on the tour map.
+    var AIRPLANE_PATH = 'M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z';
+    function airplaneSvg(px, color) {
+      return '<svg width="' + px + '" height="' + px + '" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" ' +
+             'style="vertical-align:-3px;margin-right:6px;flex:none;" aria-label="Drone photo">' +
+             '<path d="' + AIRPLANE_PATH + '" fill="' + color + '"/></svg>';
+    }
+    function isAerialSite(sid) {
+      var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
+      var opt = (tourSiteOptions || []).find(function (s) { return norm(s.site_id) === norm(sid); });
+      return !!(opt && opt.platform === 'aerial');
+    }
+
+    function buildMarkerIcon(active, aerial) {
       var size = active ? 30 : 22;
       var color = active ? '#019fc4' : '#3f5a78';
       return L.divIcon({
@@ -2178,7 +2281,9 @@
               'xmlns="http://www.w3.org/2000/svg">' +
               '<path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20c0-6.6-5.4-12-12-12z" ' +
               'fill="' + color + '" stroke="#fff" stroke-width="1.5"/>' +
-              '<circle cx="12" cy="12" r="4.5" fill="#fff"/></svg>',
+              (aerial
+                ? '<path transform="translate(5.5 5.5) scale(0.55)" d="' + AIRPLANE_PATH + '" fill="#fff"/>'
+                : '<circle cx="12" cy="12" r="4.5" fill="#fff"/>') + '</svg>',
         iconSize: [size, Math.round(size * 1.33)],
         iconAnchor: [size / 2, Math.round(size * 1.33)],
         popupAnchor: [0, -Math.round(size * 1.1)],
@@ -2209,6 +2314,305 @@
           Math.sin(brng) * Math.sin(distanceMeters / R) * Math.cos(lat1),
           Math.cos(distanceMeters / R) - Math.sin(lat1) * Math.sin(lat2));
       return [lat2 * 180 / Math.PI, lng2 * 180 / Math.PI];
+    }
+
+    // -- locations (mode "location") ---------------------------------
+    // One site per place with many dated photos. Everything below this
+    // block was written for the older shapes, so a location is turned
+    // into one of them in memory right after its config.json loads:
+    // one photo (or any stop inside a tour) becomes a "single" config,
+    // several photos become a "timeseries" config. Shared hotspots are
+    // stored as compass bearings and get their yaw here, from the
+    // heading_offset of the photo being shown. Each one is tagged
+    // _shared/_sid so the preview server can tell it from a hotspot
+    // that belongs to just that photo when it saves.
+    function locationPhotoIndex(cfg, photoId) {
+      var photos = cfg.photos || [];
+      var wanted = photoId || cfg.default_photo;
+      for (var i = 0; i < photos.length; i++) {
+        if (photos[i].id === wanted) return i;
+      }
+      return Math.max(photos.length - 1, 0);
+    }
+
+    function resolveLocationHotspots(cfg, photo) {
+      var out = [];
+      var ho = photo.heading_offset;
+      if (ho != null) {
+        (cfg.hotspots || []).forEach(function (h) {
+          if (h.bearing == null) return;
+          var item = Object.assign({}, h);
+          delete item.bearing;
+          item.yaw = (((h.bearing - ho) % 360 + 360) % 360) * Math.PI / 180;
+          if (item.pitch == null) item.pitch = 0;
+          item._shared = true;
+          item._sid = h.id;
+          out.push(item);
+        });
+      }
+      (photo.hotspots || []).forEach(function (h) { out.push(Object.assign({}, h)); });
+      return out;
+    }
+
+    function fmtLocDate(dateStr) {
+      var d = new Date(dateStr + 'T00:00:00');
+      return (dateStr && !isNaN(d.getTime())) ? d.toLocaleDateString() : (dateStr || '');
+    }
+
+    // Photos in date order (ties keep storage order), as indexes.
+    function locationDateOrder(cfg) {
+      var ph = cfg.photos || [];
+      return ph.map(function (p, i) { return i; }).sort(function (x, y) {
+        return String(ph[x].date || '').localeCompare(String(ph[y].date || '')) || (x - y);
+      });
+    }
+
+    function locationDatesList(cfg) {
+      return locationDateOrder(cfg).map(function (i) {
+        var p = cfg.photos[i];
+        return { idx: i, id: p.id, date: p.date, text: fmtLocDate(p.date) || p.label || p.id };
+      });
+    }
+
+    // Two dates of one location as the older two photo compare shapes the
+    // viewer already knows: view is 'compare' (side by side), 'curtain'
+    // (swipe) or 'toggle'. Both photos' shared links are drawn using each
+    // photo's own heading, and when both headings are known the right
+    // photo starts facing the same compass direction as the left one.
+    function locationCompareConfig(cfg, base, view, aId, bId) {
+      var photos = cfg.photos;
+      var idxOf = function (id) {
+        for (var i = 0; i < photos.length; i++) { if (photos[i].id === id) return i; }
+        return -1;
+      };
+      var ia = idxOf(aId), ib = idxOf(bId);
+      if (ia < 0 || ib < 0 || ia === ib) {
+        var order = locationDateOrder(cfg);
+        ia = order[order.length - 2];
+        ib = order[order.length - 1];
+      }
+      var A = photos[ia], B = photos[ib];
+      var yawA = A.yaw || 0, yawB = B.yaw || 0;
+      if (A.heading_offset != null && B.heading_offset != null) {
+        yawB = yawA + (A.heading_offset - B.heading_offset) * Math.PI / 180;
+      }
+      return Object.assign(base, {
+        mode: view === 'curtain' ? 'curtain' : (view === 'toggle' ? 'toggle' : 'compare'),
+        format_1: A.format || 'raw', format_2: B.format || 'raw',
+        levels_1: A.levels || [], levels_2: B.levels || [],
+        mobile_1: A.mobile || 0, mobile_2: B.mobile || 0,
+        yaw_1: yawA, pitch_1: A.pitch || 0, yaw_2: yawB, pitch_2: B.pitch || 0,
+        label_1: fmtLocDate(A.date) || A.label || 'Photo A', label_2: fmtLocDate(B.date) || B.label || 'Photo B',
+        hotspots_1: resolveLocationHotspots(cfg, A), hotspots_2: resolveLocationHotspots(cfg, B),
+        heading_offset: A.heading_offset == null ? null : A.heading_offset,
+        _imgNameL: A.path || ('img' + (ia + 1)), _imgNameR: B.path || ('img' + (ib + 1)),
+        _photoIndex: ia, _locSlots: { '1': ia, '2': ib },
+        _locView: view, _locDates: locationDatesList(cfg), _locA: A.id, _locB: B.id,
+      });
+    }
+
+    function normalizeLocationConfig(cfg, photoId, forceSingle, params) {
+      if (!cfg || cfg.mode !== 'location' || !(cfg.photos && cfg.photos.length)) return cfg;
+      var base = {
+        pin_style: cfg.pin_style, lat: cfg.lat, lng: cfg.lng, autorotate: cfg.autorotate,
+        basemap_type: cfg.basemap_type, basemap_url: cfg.basemap_url, overlays: cfg.overlays,
+        _location: true, _platform: cfg.platform, _locName: cfg.name || null,
+      };
+      var view = (params && params.view) || 'compare';
+      if (view === 'toggle') view = 'compare'; // Toggle isn't offered any more; old links still open
+      if (!forceSingle && cfg.photos.length >= 2 && (view === 'compare' || view === 'curtain')) {
+        return locationCompareConfig(cfg, base, view, params && params.a, params && params.b);
+      }
+      if (cfg.photos.length === 1 || forceSingle) {
+        var idx = locationPhotoIndex(cfg, photoId);
+        var p = cfg.photos[idx];
+        var order = locationDateOrder(cfg);
+        var otherIdx = order.filter(function (i) { return i !== idx; }).pop();
+        return Object.assign(base, {
+          mode: 'single', format: p.format || 'raw', levels_1: p.levels || [], mobile_1: p.mobile || 0,
+          yaw_1: p.yaw || 0, pitch_1: p.pitch || 0, label_1: p.label || '',
+          hotspots_1: resolveLocationHotspots(cfg, p),
+          heading_offset: p.heading_offset == null ? null : p.heading_offset,
+          _unplacedLinks: p.heading_offset == null
+              ? (cfg.hotspots || []).filter(function (h) { return h.category === 'link' && h.target; })
+              : [],
+          _photoIndex: idx, _imgName: p.path || ('img' + (idx + 1)), _photoId: p.id,
+          _locDates: locationDatesList(cfg),
+          _locCompare: otherIdx == null ? null : { a: p.id, b: cfg.photos[otherIdx].id },
+        });
+      }
+      // The Dates strip runs oldest to newest and opens on the default (newest)
+      // photo. Each entry remembers its image folder and its place in the
+      // stored list, so images and saves still go to the right photo.
+      var dateOrder = locationDateOrder(cfg);
+      var tsSlots = {};
+      dateOrder.forEach(function (storeIdx, i) { tsSlots[String(i)] = storeIdx; });
+      var startStore = locationPhotoIndex(cfg, null);
+      return Object.assign(base, {
+        mode: 'timeseries', format: cfg.photos[0].format || 'raw', heading_offset: null,
+        _locView: 'dates', _locDates: locationDatesList(cfg), _locA: null, _locB: null,
+        _locSlots: tsSlots, _locTs: true, _locStart: Math.max(dateOrder.indexOf(startStore), 0),
+        photos: dateOrder.map(function (storeIdx) {
+          var p = cfg.photos[storeIdx];
+          return {
+            label: fmtLocDate(p.date) || p.label || '', yaw: p.yaw || 0, pitch: p.pitch || 0, format: p.format || 'raw',
+            levels: p.levels || [], mobile: p.mobile || 0, hotspots: resolveLocationHotspots(cfg, p),
+            _img: p.path || ('img' + (storeIdx + 1)),
+          };
+        }),
+      });
+    }
+
+    // The tours landing page already shows "visited <date>" on each card, so
+    // tour names are saved without a date. Inside a tour the date is added
+    // to the name here: "Site Visit (+5.8ft)" becomes "Site Visit (9/30/2026, +5.8ft)".
+    function tourNameWithDate(name, dateStr) {
+      if (!dateStr) return name;
+      var d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d.getTime())) return name;
+      var shown = d.toLocaleDateString();
+      var m = String(name).match(/^(.*?)\s*\(([^()]*)\)\s*$/);
+      if (m) {
+        if (m[2].indexOf(shown) !== -1 || m[2].indexOf(dateStr) !== -1) return name;
+        return m[1] + ' (' + shown + ', ' + m[2] + ')';
+      }
+      if (String(name).indexOf(shown) !== -1) return name;
+      return name + ' (' + shown + ')';
+    }
+
+    // Tours published before the date was saved in the manifest get it from
+    // tours/_index.json instead.
+    function withTourDate(manifest, sanitizedTour) {
+      if (manifest.field_visit_date) return Promise.resolve(manifest);
+      return fetch('tours/_index.json', { cache: 'no-store' })
+        .then(function (res) { return res.ok ? res.json() : []; })
+        .then(function (list) {
+          var e = (Array.isArray(list) ? list : []).find(function (x) { return x.tour_id === sanitizedTour; });
+          if (e && e.field_visit_date) manifest.field_visit_date = e.field_visit_date;
+          return manifest;
+        })
+        .catch(function () { return manifest; });
+    }
+
+    // Date and compare controls for a location with two or more dates. Changing
+    // anything reloads the page with the choice in the address, so every view
+    // can be bookmarked or shared as a link.
+    function buildLocationToolbar(config) {
+      var dates = config._locDates, view = config._locView;
+      var bar = document.createElement('div');
+      bar.id = 'loc-toolbar';
+      bar.style.cssText = 'position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:1002;' +
+          'display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;max-width:94vw;' +
+          'padding:6px 8px;background:rgba(10,20,40,0.88);border:1px solid #019fc4;border-radius:8px;' +
+          'color:#fff;font:bold 12px system-ui,sans-serif;';
+      if (config._locName) {
+        var nameEl = document.createElement('div');
+        nameEl.textContent = config._locName;
+        nameEl.style.cssText = 'font:bold 14px system-ui,sans-serif;padding:0 8px 0 4px;color:#fff;';
+        bar.appendChild(nameEl);
+      }
+      var go = function (next) {
+        var q = new URLSearchParams(window.location.search);
+        Object.keys(next).forEach(function (k) { if (next[k] == null) q.delete(k); else q.set(k, next[k]); });
+        window.location.search = q.toString();
+      };
+      // Location picker: every place photographed on more than one date.
+      // Switched off for now (one location at a time); set to true to bring it back.
+      var showLocationPicker = false;
+      var locWrap = document.createElement('label');
+      locWrap.style.cssText = 'display:none;align-items:center;gap:4px;';
+      locWrap.appendChild(document.createTextNode('Location'));
+      var locSel = document.createElement('select');
+      locSel.style.cssText = 'background:#0a1428;color:#fff;border:1px solid #019fc4;border-radius:4px;padding:5px;font-size:12px;max-width:220px;';
+      locWrap.appendChild(locSel);
+      if (showLocationPicker) bar.appendChild(locWrap);
+      fetch(showLocationPicker ? 'tiles/_locations.json' : 'data:application/json,[]', { cache: 'no-store' })
+        .then(function (res) { return res.ok ? res.json() : []; })
+        .then(function (list) {
+          if (!Array.isArray(list) || list.length < 2) return;
+          list.forEach(function (l) {
+            var o = document.createElement('option');
+            o.value = l.site_id;
+            o.textContent = l.name || l.site_id;
+            if (l.site_id === siteId) o.selected = true;
+            locSel.appendChild(o);
+          });
+          locWrap.style.display = 'flex';
+          locSel.addEventListener('change', function () {
+            go({ site: locSel.value, view: view, a: null, b: null });
+          });
+        })
+        .catch(function () {});
+      [['dates', 'Dates'], ['compare', 'Side by side'], ['curtain', 'Swipe']].forEach(function (vw) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'ctrl-btn';
+        b.textContent = vw[1];
+        if (view === vw[0]) b.style.cssText = 'background:#019fc4;color:#0e1b33;';
+        b.addEventListener('click', function () { go({ view: vw[0] }); });
+        bar.appendChild(b);
+      });
+      if (view !== 'dates') {
+        var mkSel = function (label, current, key) {
+          var wrap = document.createElement('label');
+          wrap.style.cssText = 'display:flex;align-items:center;gap:4px;';
+          wrap.appendChild(document.createTextNode(label));
+          var sel = document.createElement('select');
+          sel.style.cssText = 'background:#0a1428;color:#fff;border:1px solid #019fc4;border-radius:4px;padding:5px;font-size:12px;';
+          dates.forEach(function (d) {
+            var o = document.createElement('option');
+            o.value = d.id;
+            o.textContent = d.text;
+            if (d.id === current) o.selected = true;
+            sel.appendChild(o);
+          });
+          sel.addEventListener('change', function () {
+            var next = { view: view, a: config._locA, b: config._locB };
+            next[key] = sel.value;
+            go(next);
+          });
+          wrap.appendChild(sel);
+          return wrap;
+        };
+        bar.appendChild(mkSel('Left', config._locA, 'a'));
+        bar.appendChild(mkSel('Right', config._locB, 'b'));
+      }
+      document.body.appendChild(bar);
+    }
+
+    // Inside a tour: a button on any stop that has other dates, opening that
+    // location's compare page with this tour's photo on the left.
+    var tourCompareInfo = {};
+    var tourCompareBtn = null;
+    var SHOW_TOUR_COMPARE_BUTTON = false; // switched off: comparisons are opened from the tours page
+    function updateTourCompareButton(sid) {
+      if (!SHOW_TOUR_COMPARE_BUTTON) return;
+      var info = sid ? tourCompareInfo[sid] : null;
+      if (!tourCompareBtn) {
+        tourCompareBtn = document.createElement('button');
+        tourCompareBtn.type = 'button';
+        tourCompareBtn.className = 'ctrl-btn';
+        tourCompareBtn.textContent = 'Compare Dates';
+        tourCompareBtn.style.cssText = 'position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:1002;display:none;';
+        tourCompareBtn.addEventListener('click', function () {
+          if (tourCompareBtn.dataset.href) window.open(tourCompareBtn.dataset.href, '_blank');
+        });
+        document.body.appendChild(tourCompareBtn);
+      }
+      if (info) {
+        tourCompareBtn.dataset.href = 'index.html?site=' + encodeURIComponent(sid) + '&view=compare&a=' +
+            encodeURIComponent(info.a) + '&b=' + encodeURIComponent(info.b);
+        tourCompareBtn.style.display = 'inline-block';
+      } else {
+        tourCompareBtn.style.display = 'none';
+      }
+    }
+
+    function tourPhotoIdFor(sid) {
+      var opt = (tourSiteOptions || []).find(function (s) {
+        return s.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_') === sid;
+      });
+      return opt ? opt.photo : null;
     }
 
     function computeBearingJs(lat1, lng1, lat2, lng2) {
@@ -2262,7 +2666,12 @@
       container.innerHTML = '';
       if (!tourParam || !activeTourSiteId) return;
       var slotId = getCurrentPrimarySlotId();
-      var links = (pendingSlotHotspots[slotId] || []).filter(h => h.category === 'link' && h.target);
+      var links = (pendingSlotHotspots[slotId] || []).filter(h => h.category === 'link' && h.target && !linkOutsideTour(h));
+      var haveTargets = {};
+      links.forEach(h => { haveTargets[h.target] = true; });
+      (unplacedBySite[activeTourSiteId] || []).forEach(h => {
+        if (!haveTargets[h.target] && !linkOutsideTour(h)) links.push({ category: 'link', target: h.target, title: h.title });
+      });
       if (!links.length) return;
       var label = document.createElement('div');
       label.className = 'heading-calibrate-label';
@@ -2294,13 +2703,14 @@
       btn.textContent = 'Calibrating\u2026';
       fetch('/__save_heading', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site_id: activeTourSiteId, heading: heading }),
+        body: JSON.stringify({ site_id: activeTourSiteId, heading: heading, loc_photo: locPhotoFor(activeTourSiteId) }),
       }).then(res => {
         if (!res.ok) throw new Error('save-failed');
         currentHeadingOffset = heading;
         headingIsKnown = true;
         updateHeadingDialDisplay();
         syncSceneCacheHeading(activeTourSiteId, heading, true);
+        reloadStopIfLinksWaiting(activeTourSiteId);
         // Snap every link hotspot at this site to its real bearing now,
         // including the one just used -- its position was never
         // dragged this time, only inferred, so there's nothing "already
@@ -2326,7 +2736,7 @@
           markHotspotsDirty(snapSid);
           fetch('/__save_hotspots', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ site_id: snapSid, slots: { '1': pendingSlotHotspots[slotId] || [] } }),
+            body: JSON.stringify({ site_id: snapSid, slots: { '1': pendingSlotHotspots[slotId] || [] }, loc_photo: locPhotoFor(snapSid) }),
           }).then(res => { if (res.ok) markHotspotsClean(snapSid); }).catch(() => {});
         }
         btn.textContent = 'Calibrated! Snapped ' + snapped + ' pin(s)';
@@ -2406,7 +2816,7 @@
       Object.keys(tourMarkersBySite).forEach(sid => {
         var m = tourMarkersBySite[sid];
         var active = sid === activeTourSiteId;
-        m.setIcon(buildMarkerIcon(active));
+        m.setIcon(buildMarkerIcon(active, isAerialSite(sid)));
         if (active) m.setZIndexOffset(1000);
       });
       // Cluster icons are separate from the child markers' own icons,
@@ -2420,9 +2830,38 @@
       // someone who does.
       var activeMarker = tourMarkersBySite[activeTourSiteId];
       if (siteMap && activeMarker && siteMapPanel.style.display !== 'none') {
-        siteMap.panTo(activeMarker.getLatLng());
+        var firstStop = lastFollowedSiteId === null;
+        var changed = activeTourSiteId !== lastFollowedSiteId;
+        lastFollowedSiteId = activeTourSiteId;
+        // The first stop shown keeps the whole site view for orientation; after
+        // that, picking a stop zooms the map in to it (never zooms back out).
+        if (changed && !firstStop && autoZoomStops) zoomMapToStop(activeMarker.getLatLng());
+        else siteMap.panTo(activeMarker.getLatLng());
       }
     }
+
+    // -- zoom the map to each stop as it is selected -----------------------
+    var STOP_ZOOM = 18;            // the one number to change for a tighter or wider view
+    var autoZoomStops = true;
+    var lastFollowedSiteId = null;
+    try { if (localStorage.getItem('mapAutoZoomStops') === '0') autoZoomStops = false; } catch (e) {}
+    function zoomMapToStop(latlng) {
+      var z = Math.min(Math.max(siteMap.getZoom(), STOP_ZOOM), siteMap.getMaxZoom());
+      if (Math.abs(z - siteMap.getZoom()) > 1) siteMap.flyTo(latlng, z, { duration: 0.6 });
+      else siteMap.setView(latlng, z, { animate: true });
+    }
+    (function () {
+      var btn = document.getElementById('site-map-follow-btn');
+      btn.classList.toggle('armed', autoZoomStops);
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        autoZoomStops = !autoZoomStops;
+        btn.classList.toggle('armed', autoZoomStops);
+        try { localStorage.setItem('mapAutoZoomStops', autoZoomStops ? '1' : '0'); } catch (err) {}
+        var m = tourMarkersBySite[activeTourSiteId];
+        if (autoZoomStops && siteMap && m) zoomMapToStop(m.getLatLng());
+      });
+    })();
 
     // -- basemap toggle (only shown when a tour/site actually has a
     // non-OSM basemap configured -- nothing to toggle to otherwise) --
@@ -2441,6 +2880,83 @@
       usingCustomBasemap = !usingCustomBasemap;
       basemapToggleBtn.title = usingCustomBasemap ? 'Switch to OpenStreetMap' : 'Switch to site imagery';
     });
+
+    // ---- minimal ArcGIS renderer reader (simple / unique value / class breaks) ----
+    // Turns the drawingInfo.renderer saved on a feature service into a Leaflet
+    // style object per feature. Own code instead of a plugin, no extra scripts.
+    function esriRgba(c, fallbackA) {
+      if (!c || c.length < 3) return null;
+      var a = c.length > 3 ? c[3] / 255 : (fallbackA == null ? 1 : fallbackA);
+      return { css: 'rgb(' + c[0] + ',' + c[1] + ',' + c[2] + ')', a: a };
+    }
+    function esriSymbolToStyle(sym, baseOpacity) {
+      if (!sym) return null;
+      var st = {};
+      var main = esriRgba(sym.color);
+      var ol = sym.outline || null;
+      var olc = ol ? esriRgba(ol.color) : null;
+      if (sym.type === 'esriSLS') {
+        st.color = main ? main.css : '#019fc4';
+        st.opacity = (main ? main.a : 1) * baseOpacity;
+        st.weight = Math.max(1, (sym.width || 1) * 1.333);
+        st.fill = false;
+      } else {
+        // esriSFS (polygon) and esriSMS (point marker)
+        st.fill = !!main && main.a > 0;
+        st.fillColor = main ? main.css : '#019fc4';
+        st.fillOpacity = (main ? main.a : 0) * baseOpacity;
+        st.color = olc ? olc.css : (main ? main.css : '#019fc4');
+        st.opacity = (olc ? olc.a : 1) * baseOpacity;
+        st.weight = ol && ol.width != null ? Math.max(ol.width > 0 ? 1 : 0, ol.width * 1.333) : 1;
+        if (olc && olc.a === 0) st.weight = 0;
+        if (sym.type === 'esriSMS') st.radius = Math.max(3, (sym.size || 8) / 2 * 1.333);
+      }
+      return st;
+    }
+    function esriPickSymbol(renderer, props) {
+      if (!renderer) return null;
+      var sym = null;
+      if (renderer.type === 'simple') {
+        sym = renderer.symbol;
+      } else if (renderer.type === 'uniqueValue') {
+        var v = props ? props[renderer.field1] : null;
+        var hit = (renderer.uniqueValueInfos || []).find(function (i) { return String(i.value) === String(v); });
+        sym = hit ? hit.symbol : renderer.defaultSymbol;
+      } else if (renderer.type === 'classBreaks') {
+        var n = props ? Number(props[renderer.field]) : NaN;
+        var infos = renderer.classBreakInfos || [];
+        for (var k = 0; k < infos.length; k++) {
+          if (n <= infos[k].classMaxValue) { sym = infos[k].symbol; break; }
+        }
+        if (!sym) sym = renderer.defaultSymbol;
+      }
+      return sym;
+    }
+    function esriRendererStyle(renderer, props, baseOpacity) {
+      return esriSymbolToStyle(esriPickSymbol(renderer, props), baseOpacity);
+    }
+    // Point marker symbol as a small HTML icon (diamond, square, circle, triangle).
+    function esriMarkerIcon(sym, baseOpacity) {
+      var size = Math.max(6, (sym.size || 8) * 1.333);
+      var fill = esriRgba(sym.color);
+      var ol = sym.outline || {};
+      var olc = esriRgba(ol.color);
+      var bw = ol.width != null ? Math.max(ol.width > 0 ? 1 : 0, ol.width * 1.333) : 1;
+      var bg = fill && fill.a > 0
+          ? fill.css.replace('rgb(', 'rgba(').replace(')', ',' + (fill.a * baseOpacity) + ')') : 'transparent';
+      var bc = olc ? olc.css.replace('rgb(', 'rgba(').replace(')', ',' + (olc.a * baseOpacity) + ')') : 'transparent';
+      var shape = '';
+      var inner = size;
+      if (sym.style === 'esriSMSDiamond') { shape = 'transform:rotate(45deg);'; inner = size * 0.72; }
+      else if (sym.style === 'esriSMSSquare') { shape = ''; }
+      else if (sym.style === 'esriSMSTriangle') { shape = 'clip-path:polygon(50% 0,100% 100%,0 100%);'; }
+      else { shape = 'border-radius:50%;'; }
+      var html = '<div style="width:' + inner + 'px;height:' + inner + 'px;box-sizing:border-box;background:' + bg +
+                 ';border:' + bw + 'px solid ' + bc + ';' + shape + '"></div>';
+      return L.divIcon({
+        className: 'esri-pt', html: html, iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+      });
+    }
 
     function ensureMapInitialized() {
       if (siteMap || typeof L === 'undefined') return;
@@ -2507,20 +3023,107 @@
             // reference layer rather than a second copy of AGOL's
             // own Map Viewer.
             siteMap.getPane(paneName).style.pointerEvents = 'auto';
-            var color = o.color || '#019fc4';
-            layer = L.esri.featureLayer({
-              url: o.url, pane: paneName,
-              style: function () { return { color: color, weight: 2, fillColor: color, fillOpacity: opacity * 0.35, opacity: opacity }; },
-            });
-            layer.bindPopup(l => {
-              var props = (l.feature && l.feature.properties) || {};
-              var rows = Object.keys(props)
-                  .filter(k => props[k] !== null && props[k] !== '')
-                  .map(k => '<tr><td style="font-weight:600;padding-right:10px;">' + escapeHtml(k) +
-                             '</td><td>' + escapeHtml(String(props[k])) + '</td></tr>')
-                  .join('');
-              return rows ? '<table style="font-size:12px;">' + rows + '</table>' : '(no attributes)';
-            });
+            // Typed color in the overlay settings = one flat color. Blank color =
+            // use the symbology and labels saved on the service (read from its metadata).
+            var layerOpts = { url: o.url, pane: paneName };
+            var serviceRenderer = null;
+            var labelInfo = null; // { expr, color, halo }
+            var flatColor = o.color || '#019FC4';
+            var styleFn = function (feature) {
+              if (!o.color && serviceRenderer) {
+                var st = esriRendererStyle(serviceRenderer, feature && feature.properties, opacity);
+                if (st) return st;
+              }
+              return { color: flatColor, weight: 2, fillColor: flatColor, fillOpacity: opacity * 0.35, opacity: opacity };
+            };
+            layerOpts.style = styleFn;
+            var markerFor = function (feature, latlng) {
+              if (!o.color && serviceRenderer) {
+                var sym = esriPickSymbol(serviceRenderer, feature && feature.properties);
+                if (sym && sym.type === 'esriSMS') {
+                  return L.marker(latlng, { icon: esriMarkerIcon(sym, opacity), pane: paneName, keyboard: false });
+                }
+              }
+              return L.circleMarker(latlng, Object.assign({ radius: 6, pane: paneName }, styleFn(feature)));
+            };
+            layerOpts.pointToLayer = markerFor;
+            layer = L.esri.featureLayer(layerOpts);
+            var featLayer = layer;
+            // Field aliases, field types, and (when no flat color) renderer + labels.
+            var aliasFor = {}, typeFor = {};
+            // System and GNSS bookkeeping fields: OBJECTID, OBJECTID_1, GlobalID_2, Shape__Area,
+            // truncated Shape_Leng, esrignss_* receiver metadata, editor tracking.
+            var HIDDEN_FIELD_RE = /^(objectid|fid$|globalid|shape|st_area|st_length|esrignss|gnss_|created_(user|date)|last_edited_(user|date)|creationdate|creator|editdate|editor)/i;
+            var labelText = function (props) {
+              if (!labelInfo || !props) return '';
+              var t = labelInfo.expr.replace(/\[([^\]]+)\]|\$feature\.([A-Za-z0-9_]+)/g, function (m, f1, f2) {
+                var v = props[f1 || f2];
+                return v == null ? '' : String(v);
+              });
+              return t.trim();
+            };
+            var attachLabel = function (l) {
+              if (!labelInfo || !l || !l.feature) return;
+              var txt = labelText(l.feature.properties);
+              if (l.unbindTooltip) l.unbindTooltip();
+              if (!txt) return;
+              var halo = labelInfo.halo || 'rgba(0,0,0,0.8)';
+              var content = '<span style="color:' + (labelInfo.color || '#fff') + ';text-shadow:-1px -1px 0 ' + halo +
+                            ',1px -1px 0 ' + halo + ',-1px 1px 0 ' + halo + ',1px 1px 0 ' + halo + ';">' + escapeHtml(txt) + '</span>';
+              l.bindTooltip(content, { permanent: true, direction: 'right', offset: [8, 0], className: 'esri-label', pane: 'tooltipPane' });
+            };
+            try {
+              featLayer.on('createfeature', function (e) {
+                try { attachLabel(featLayer.getFeature(e.feature.id)); } catch (e3) {}
+              });
+              featLayer.metadata(function (err, meta) {
+                if (err || !meta) return;
+                (meta.fields || []).forEach(function (f) { aliasFor[f.name] = f.alias || f.name; typeFor[f.name] = f.type; });
+                var di = meta.drawingInfo;
+                if (!o.color && di && di.renderer) {
+                  serviceRenderer = di.renderer;
+                  try { featLayer.setStyle(styleFn); } catch (e2) { console.error('Restyle failed', e2); }
+                  // Point layers were built before the renderer arrived: swap their icons now.
+                  try {
+                    featLayer.eachFeature(function (l) {
+                      if (l.setIcon && l.feature) {
+                        var sym = esriPickSymbol(serviceRenderer, l.feature.properties);
+                        if (sym && sym.type === 'esriSMS') l.setIcon(esriMarkerIcon(sym, opacity));
+                      }
+                    });
+                  } catch (e4) {}
+                }
+                var li = !o.color && di && di.labelingInfo && di.labelingInfo[0];
+                if (li) {
+                  var expr = li.labelExpression || (li.labelExpressionInfo && (li.labelExpressionInfo.value || li.labelExpressionInfo.expression)) || '';
+                  if (/\[[^\]]+\]|\$feature\.[A-Za-z0-9_]+/.test(expr) && !/[()+]/.test(expr.replace(/\[[^\]]+\]/g, ''))) {
+                    var lc = li.symbol && esriRgba(li.symbol.color);
+                    var hc = li.symbol && esriRgba(li.symbol.haloColor);
+                    labelInfo = { expr: expr, color: lc ? lc.css : '#fff', halo: hc ? hc.css : null };
+                    featLayer.eachFeature(attachLabel);
+                  }
+                }
+              });
+            } catch (err) { console.error('Overlay metadata lookup failed', err); }
+            if (o.popup !== false) {
+              layer.bindPopup(l => {
+                var props = (l.feature && l.feature.properties) || {};
+                var fmt = function (k, v) {
+                  var t = typeFor[k];
+                  if (t === 'esriFieldTypeDate' && Number.isFinite(Number(v))) return new Date(Number(v)).toLocaleDateString();
+                  if ((t === 'esriFieldTypeDouble' || t === 'esriFieldTypeSingle') && Number.isFinite(Number(v))) {
+                    return Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 });
+                  }
+                  return String(v);
+                };
+                var rows = Object.keys(props)
+                    .filter(k => props[k] !== null && String(props[k]).trim() !== '' && !HIDDEN_FIELD_RE.test(k))
+                    .map(k => '<tr><td>' + escapeHtml(aliasFor[k] || k) + '</td><td>' + escapeHtml(fmt(k, props[k])) + '</td></tr>')
+                    .join('');
+                var title = o.label ? '<div class="overlay-popup-title">' + escapeHtml(o.label) + '</div>' : '';
+                return '<div class="overlay-popup">' + title + (rows ? '<table>' + rows + '</table>' : '<div>(no attributes)</div>') + '</div>';
+              });
+            }
           } else {
             layer = L.tileLayer(o.url, { maxZoom: 22, opacity: opacity, attribution: 'Imagery: SPSSEG', pane: paneName });
           }
@@ -2646,7 +3249,7 @@
         if (useCluster) markerClusterGroup = L.markerClusterGroup({ maxClusterRadius: 40 });
         pendingMapData.sites.forEach(s => {
           var isActive = s.site_id === activeTourSiteId;
-          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive) });
+          var m = L.marker([s.lat, s.lng], { icon: buildMarkerIcon(isActive, s.platform === 'aerial') });
           m.bindPopup(escapeHtml(s.display_name || s.site_id));
           if (isActive) m.setZIndexOffset(1000);
           m.on('click', () => {
@@ -2689,6 +3292,18 @@
       }
     });
 
+    // Links belong to a stop, not to a tour, so a stop reused in a newer tour
+    // brings along links to places that tour doesn't include. In a tour those
+    // links are kept (so saving never deletes them) but not drawn or listed.
+    var hideLinksInComparison = false; // set for a location's own page, so nobody clicks away from it
+    function linkOutsideTour(spot) {
+      if (hideLinksInComparison && spot && spot.category === 'link') return true;
+      if (!tourParam || !tourSiteOptions || !spot || spot.category !== 'link' || !spot.target) return false;
+      var norm = function (x) { return String(x).trim().toLowerCase().replace(/[\s-]+/g, '_'); };
+      var t = norm(spot.target);
+      return !tourSiteOptions.some(function (s) { return norm(s.site_id) === t; });
+    }
+
     function renderHotspots(scene, hotspots, slotId, panelEl, view, viewerRef) {
       if (!hotspots || !Array.isArray(hotspots) || !hotspots.length) return;
       hotspotsToggleBtn.style.display = 'inline-block';
@@ -2702,6 +3317,7 @@
       // every pre-existing hotspot for that slot.
       if (!pendingSlotHotspots[slotId]) pendingSlotHotspots[slotId] = hotspots.slice();
       hotspots.forEach(spot => {
+        if (linkOutsideTour(spot)) return;
         var pin = buildHotspotPin(spot);
         var hotspotObj = scene.hotspotContainer().createHotspot(pin.el, { yaw: spot.yaw, pitch: spot.pitch });
         wireHotspotInteractions(pin, spot, {
@@ -2760,7 +3376,7 @@
       var content = document.getElementById('hotspot-list-content');
       if (content.style.display === 'none') return; // don't do the work while collapsed
       var slotId = getCurrentPrimarySlotId();
-      var spots = pendingSlotHotspots[slotId] || [];
+      var spots = (pendingSlotHotspots[slotId] || []).filter(s => !linkOutsideTour(s));
       if (!spots.length) {
         content.innerHTML = '<div class="hotspot-list-empty">No hotspots on this view.</div>';
         return;
@@ -2830,6 +3446,7 @@
                                  // just whenever the dial happens to read zero
     function updateHeadingDialDisplay() {
       document.getElementById('heading-value-display').textContent = Math.round(currentHeadingOffset);
+      if (window.__hdgSync) setTimeout(window.__hdgSync, 0);
     }
     function currentEditSiteId() {
       return (tourParam && activeTourSiteId) ? activeTourSiteId : siteId;
@@ -2852,15 +3469,175 @@
         var original = saveBtn.textContent;
         fetch('/__save_heading', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ site_id: targetSite, heading: currentHeadingOffset }),
+          body: JSON.stringify({ site_id: targetSite, heading: currentHeadingOffset, loc_photo: locPhotoFor(targetSite) }),
         }).then(res => {
-          if (res.ok) syncSceneCacheHeading(targetSite, currentHeadingOffset, true);
+          if (res.ok) { syncSceneCacheHeading(targetSite, currentHeadingOffset, true); reloadStopIfLinksWaiting(targetSite); }
           saveBtn.textContent = res.ok ? 'Saved!' : 'Failed, try again';
           setTimeout(() => { saveBtn.textContent = original; }, 1400);
         }).catch(() => {
           saveBtn.textContent = 'Preview server not reachable';
           setTimeout(() => { saveBtn.textContent = original; }, 1800);
         });
+      });
+    })();
+    // ---- fast heading workflow for long stop sequences ----
+    (function () {
+      // Heading check marks are an editing aid: local preview only, never on the published site.
+      var HDG_LOCAL = (location.hostname === '127.0.0.1' || location.hostname === 'localhost');
+      if (HDG_LOCAL) document.body.classList.add('hdg-local');
+      var norm = function (s) { return s.trim().toLowerCase().replace(/[\s-]+/g, '_'); };
+      var doneSet = {};
+      function idxOf(sid) {
+        return (tourSiteOptions || []).findIndex(function (s) { return norm(s.site_id) === sid; });
+      }
+      function markDone(sid, on) {
+        if (on) doneSet[sid] = true;
+        var el = document.querySelector('.tour-stop-link[data-site-id="' + sid + '"]');
+        if (el) el.classList.toggle('hdg-done', !!doneSet[sid]);
+        updateProgress();
+      }
+      function updateProgress() {
+        var el = document.getElementById('hdg-progress');
+        if (!el || !tourSiteOptions) return;
+        var n = tourSiteOptions.filter(function (s) { return doneSet[norm(s.site_id)]; }).length;
+        el.textContent = 'Headings set: ' + n + ' of ' + tourSiteOptions.length;
+        var fill = document.getElementById('hdg-bar-fill');
+        if (fill) fill.style.width = (tourSiteOptions.length ? (100 * n / tourSiteOptions.length) : 0) + '%';
+      }
+      // A check means the stop's saved heading is not the default 0 degrees.
+      // Read from each stop's config.json once per page load, plus any stop saved this session.
+      var seeded = false;
+      function seedConfirmed() {
+        if (seeded || !tourSiteOptions || !tourSiteOptions.length) return;
+        seeded = true;
+        tourSiteOptions.forEach(function (st) {
+          var sid = norm(st.site_id);
+          fetch('tiles/' + sid + '/config.json', { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (cfg) {
+              if (!cfg) return;
+              var nonzero = function (h) { return h != null && Number(h) % 360 !== 0; };
+              var ok = nonzero(cfg.heading_offset) ||
+                       (cfg.photos || []).some(function (ph) { return ph && nonzero(ph.heading_offset); });
+              if (ok) markDone(sid, true); else updateProgress();
+            }).catch(function () {});
+        });
+      }
+      window.__hdgSync = function () {
+        if (!tourParam || !HDG_LOCAL) return;
+        seedConfirmed();
+        var els = document.querySelectorAll('.tour-stop-link');
+        els.forEach(function (el) {
+          el.classList.toggle('hdg-done', !!doneSet[el.getAttribute('data-site-id')]);
+        });
+        updateProgress();
+      };
+      function flash(btn, text, ms) {
+        var o = btn.dataset.orig || btn.textContent;
+        btn.dataset.orig = o; btn.textContent = text;
+        setTimeout(function () { btn.textContent = o; }, ms || 1200);
+      }
+      function neighborBearing() {
+        // Bearing to the next stop; the last stop uses the direction of travel from the previous one.
+        var i = idxOf(activeTourSiteId);
+        if (i < 0) return null;
+        var me = findTourSiteLatLng(activeTourSiteId);
+        if (!me) return null;
+        if (i + 1 < tourSiteOptions.length) {
+          var n = tourSiteOptions[i + 1];
+          if (n.lat != null && n.lng != null) return computeBearingJs(me[0], me[1], n.lat, n.lng);
+        }
+        if (i > 0) {
+          var p = tourSiteOptions[i - 1];
+          if (p.lat != null && p.lng != null) return computeBearingJs(p.lat, p.lng, me[0], me[1]);
+        }
+        return null;
+      }
+      function saveThen(heading, btn, advance) {
+        var sid = activeTourSiteId;
+        if (!sid) return;
+        fetch('/__save_heading', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ site_id: sid, heading: heading, loc_photo: locPhotoFor(sid) }),
+        }).then(function (res) {
+          if (!res.ok) throw new Error('save-failed');
+          currentHeadingOffset = heading; headingIsKnown = true;
+          updateHeadingDialDisplay();
+          syncSceneCacheHeading(sid, heading, true);
+          reloadStopIfLinksWaiting(sid);
+          markDone(sid, true);
+          if (btn) flash(btn, 'Saved!', 900);
+          if (typeof updateViewCone === 'function') updateViewCone();
+          if (advance && document.getElementById('hdg-autoadv').checked) {
+            // brief pause so the cone is visible before moving on
+            setTimeout(function () { if (activeTourSiteId === sid) stepTourStop(1); }, 700);
+          }
+        }).catch(function () { if (btn) flash(btn, 'Save failed', 1800); });
+      }
+      function aimAndSave() {
+        var btn = document.getElementById('hdg-aim-btn');
+        var b = neighborBearing();
+        if (b == null || !viewL) { flash(btn, 'Missing GPS for neighbor', 1800); return; }
+        var yaw = viewL.parameters().yaw * 180 / Math.PI;
+        saveThen((b - yaw + 360) % 360, btn, true);
+      }
+      var mapArmed = false;
+      function setArmed(on) {
+        mapArmed = on;
+        var btn = document.getElementById('hdg-map-btn');
+        btn.textContent = on ? 'Click the landmark on the map... (Esc cancels)' : 'Aim at Map Point (M)';
+        if (typeof siteMap !== 'undefined' && siteMap) siteMap.getContainer().style.cursor = on ? 'crosshair' : '';
+      }
+      function mapClick(e) {
+        if (!mapArmed) return;
+        var me = findTourSiteLatLng(activeTourSiteId);
+        if (!me || !viewL) { setArmed(false); return; }
+        var b = computeBearingJs(me[0], me[1], e.latlng.lat, e.latlng.lng);
+        var yaw = viewL.parameters().yaw * 180 / Math.PI;
+        setArmed(false);
+        saveThen((b - yaw + 360) % 360, document.getElementById('hdg-map-btn'), true);
+      }
+      var mapWired = null;
+      function wireMap() {
+        if (typeof siteMap === 'undefined' || !siteMap || mapWired === siteMap) return;
+        mapWired = siteMap; siteMap.on('click', mapClick);
+      }
+      function nudgeKey(d) {
+        currentHeadingOffset = (currentHeadingOffset + d + 360) % 360;
+        headingIsKnown = true;
+        updateHeadingDialDisplay();
+        if (typeof updateViewCone === 'function') updateViewCone();
+      }
+      function jumpUnset() {
+        var i = idxOf(activeTourSiteId), n = tourSiteOptions.length;
+        for (var k = 1; k <= n; k++) {
+          var s = tourSiteOptions[(i + k) % n];
+          if (!doneSet[norm(s.site_id)]) { tourLoadStopFn(s.site_id); return; }
+        }
+        flash(document.getElementById('hdg-nextunset-btn'), 'All stops set', 1500);
+      }
+      document.getElementById('hdg-aim-btn').addEventListener('click', aimAndSave);
+      document.getElementById('hdg-map-btn').addEventListener('click', function () { wireMap(); setArmed(!mapArmed); });
+      document.getElementById('hdg-saveadv-btn').addEventListener('click', function () {
+        saveThen(currentHeadingOffset, this, true);
+      });
+      document.getElementById('hdg-nextunset-btn').addEventListener('click', jumpUnset);
+      document.addEventListener('keydown', function (e) {
+        if (!tourParam || e.ctrlKey || e.metaKey || e.altKey) return;
+        var t = e.target && e.target.tagName;
+        if (t === 'INPUT' || t === 'TEXTAREA' || t === 'SELECT') return;
+        var row = document.getElementById('heading-dial-row');
+        if (!row || row.style.display === 'none') return;
+        var k = e.key;
+        if (k === 'Enter') { e.preventDefault(); saveThen(currentHeadingOffset, document.getElementById('hdg-saveadv-btn'), true); }
+        else if (k === 'a' || k === 'A') aimAndSave();
+        else if (k === 'm' || k === 'M') { wireMap(); setArmed(!mapArmed); }
+        else if (k === 'Escape') setArmed(false);
+        else if (k === 'u' || k === 'U') jumpUnset();
+        else if (k === '[') nudgeKey(-1);
+        else if (k === ']') nudgeKey(1);
+        else if (k === '{') nudgeKey(-5);
+        else if (k === '}') nudgeKey(5);
       });
     })();
     var editHotspotsBtn = document.getElementById('edit-hotspots-btn');
@@ -2914,7 +3691,7 @@
           fetch('/__save_hotspots', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ site_id: sid, slots: { '1': pendingSlotHotspots[sid] || [] } }),
+            body: JSON.stringify({ site_id: sid, slots: { '1': pendingSlotHotspots[sid] || [] }, loc_photo: locPhotoFor(sid) }),
           }).then(res => ({ sid: sid, ok: res.ok })).catch(() => ({ sid: sid, ok: false, unreachable: true }))
         )).then(results => {
           var okList = results.filter(r => r.ok), failed = results.filter(r => !r.ok);
@@ -2935,7 +3712,7 @@
       fetch('/__save_hotspots', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site_id: siteId, slots: pendingSlotHotspots }),
+        body: JSON.stringify({ site_id: siteId, slots: pendingSlotHotspots, loc_photo: locSlotsFor(siteId) ? null : locPhotoFor(siteId), loc_slots: locSlotsFor(siteId) }),
       }).then(res => {
         saveHotspotsBtn.textContent = res.ok ? 'Saved!' : 'Failed, try again';
         setTimeout(() => { saveHotspotsBtn.textContent = original; }, 1400);
@@ -3037,6 +3814,10 @@
       fetch('tiles/' + targetSiteId + '/config.json', { cache: 'no-store' })
         .then(res => { if (!res.ok) throw new Error('missing-config'); return res.json(); })
         .then(cfg => {
+          // A location is shown as a single photo here; remember which one
+          // so the preview server saves the new link onto that photo.
+          var locPhotoIndex = cfg.mode === 'location' ? locationPhotoIndex(cfg, null) : null;
+          cfg = normalizeLocationConfig(cfg, null, true);
           var isTs = cfg.mode === 'timeseries';
           var slotId = isTs ? '0' : '1';
           var existing = isTs
@@ -3050,7 +3831,7 @@
           slots[slotId] = existing;
           return fetch('/__save_hotspots', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ site_id: targetSiteId, slots: slots }),
+            body: JSON.stringify({ site_id: targetSiteId, slots: slots, loc_photo: locPhotoIndex }),
           });
         })
         .then(res => {
@@ -3286,13 +4067,14 @@
         calibrateBtn.textContent = 'Calibrating\u2026';
         fetch('/__save_heading', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ site_id: activeTourSiteId, heading: heading }),
+          body: JSON.stringify({ site_id: activeTourSiteId, heading: heading, loc_photo: locPhotoFor(activeTourSiteId) }),
         }).then(res => {
           if (!res.ok) throw new Error('save-failed');
           currentHeadingOffset = heading;
           headingIsKnown = true;
           updateHeadingDialDisplay();
           syncSceneCacheHeading(activeTourSiteId, heading, true);
+          reloadStopIfLinksWaiting(activeTourSiteId);
           // The pin just dragged into place is now correct by
           // definition and is left alone -- every *other* link
           // hotspot at this same site can now be auto-snapped to its
@@ -3319,7 +4101,7 @@
             markHotspotsDirty(snapSid2);
             fetch('/__save_hotspots', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ site_id: snapSid2, slots: { '1': pendingSlotHotspots[snapSid2] || [] } }),
+              body: JSON.stringify({ site_id: snapSid2, slots: { '1': pendingSlotHotspots[snapSid2] || [] }, loc_photo: locPhotoFor(snapSid2) }),
             }).then(res => { if (res.ok) markHotspotsClean(snapSid2); }).catch(() => {});
           }
           calibrateBtn.textContent = snapped ? ('Calibrated! Snapped ' + snapped + ' other pin(s)') : 'Calibrated!';
@@ -3874,6 +4656,7 @@
         var fallbackLabel = linkEl ? linkEl.textContent : sid;
         activeTourSiteId = sid;
         updateActiveMapMarker();
+        updateTourCompareButton(null);
 
         if (sceneCache[sid] && sceneCache[sid].flat) {
           showFlatStop(sid, sceneCache[sid].config, fallbackLabel);
@@ -3897,6 +4680,7 @@
           mapToggleBtn.style.display = cached.hasMap ? 'inline-block' : 'none';
           hotspotsToggleBtn.style.display = cached.hasHotspots ? 'inline-block' : 'none';
           refreshHotspotList();
+          updateTourCompareButton(sid);
           return;
         }
 
@@ -3908,6 +4692,13 @@
             }).then(cfg => { configCache[sid] = cfg; return cfg; });
 
         configPromise.then(config => {
+          config = normalizeLocationConfig(config, tourPhotoIdFor(sid), true);
+          if (config._location) {
+            locPhotoBySite[sid] = config._photoIndex;
+            unplacedBySite[sid] = config._unplacedLinks || [];
+            tourCompareInfo[sid] = config._locCompare || null;
+            updateTourCompareButton(sid);
+          }
           if (config.mode === 'flat') {
             showFlatStop(sid, config, fallbackLabel);
             return;
@@ -3928,11 +4719,11 @@
           if (isTiled) {
             geometry = new Marzipano.CubeGeometry(
                 (config.levels_1 && config.levels_1.length) ? config.levels_1 : [{ tileSize: 256, size: 256, fallbackOnly: true }, { tileSize: 512, size: 512 }, { tileSize: 512, size: 1024 }, { tileSize: 512, size: 2048 }]);
-            source = Marzipano.ImageUrlSource.fromString('tiles/' + sid + '/img1/scene/{z}/{f}/{y}/{x}.jpg');
+            source = Marzipano.ImageUrlSource.fromString('tiles/' + sid + '/' + (config._imgName || 'img1') + '/scene/{z}/{f}/{y}/{x}.jpg');
             document.getElementById('pano-loading-left').classList.add('hidden');
           } else {
             geometry = new Marzipano.EquirectGeometry([{ width: rawEquirectWidth(config.mobile_1) }]);
-            var stopImgUrl = rawImageUrl('tiles/' + sid + '/img1.jpg', config.mobile_1);
+            var stopImgUrl = rawImageUrl('tiles/' + sid + '/' + (config._imgName || 'img1') + '.jpg', config.mobile_1);
             source = Marzipano.ImageUrlSource.fromString(stopImgUrl);
             preloadPanoThenRun(stopImgUrl, 'left', function () {});
           }
@@ -3979,6 +4770,12 @@
         });
       }
       tourLoadStopFn = loadStop;
+      tourReloadStopFn = function (sid) {
+        delete configCache[sid];
+        delete sceneCache[sid];
+        delete pendingSlotHotspots[sid];
+        loadStop(sid);
+      };
       syncSceneCacheHeading = function (sid, heading, known) {
         if (sceneCache[sid]) {
           sceneCache[sid].heading = heading;
@@ -3996,11 +4793,13 @@
           if (res.ok) return res.json();
           throw new Error('missing-tour');
         })
+        .then(manifest => withTourDate(manifest, sanitizedTour))
         .then(manifest => {
-          titleEl.textContent = manifest.name || tourId;
-          document.title = manifest.name || tourId;
-          tourNameForTitle = manifest.name || tourId;
-          window.helpTourName = manifest.name || tourId;
+          var shownName = tourNameWithDate(manifest.name || tourId, manifest.field_visit_date);
+          titleEl.textContent = shownName;
+          document.title = shownName;
+          tourNameForTitle = shownName;
+          window.helpTourName = shownName;
           window.helpTourIntro = (manifest.intro_note || '').toString().trim();
           var sites = manifest.sites || [];
           tourSiteOptions = sites;
@@ -4026,7 +4825,11 @@
             var link = document.createElement('div');
             link.className = 'tour-stop-link';
             var label = s.display_name || s.site_id;
-            link.textContent = label;
+            if (s.platform === 'aerial') {
+              link.innerHTML = airplaneSvg(14, 'currentColor') + escapeHtml(label);
+            } else {
+              link.textContent = label;
+            }
             var sidKey = s.site_id.trim().toLowerCase().replace(/[\s-]+/g, '_');
             link.setAttribute('data-site-id', sidKey);
             siteLinkElements[sidKey] = link;
@@ -4041,7 +4844,8 @@
             listEl.appendChild(empty);
           }
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error('Tour load failed:', err);
           titleEl.textContent = 'Tour Not Found';
           document.title = 'Tour Not Found';
           var msg = document.createElement('div');

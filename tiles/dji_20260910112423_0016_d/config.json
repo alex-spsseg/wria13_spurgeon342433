@@ -51,5 +51,6 @@
       "default_on": true,
       "type": "tile"
     }
-  ]
+  ],
+  "platform": "aerial"
 }

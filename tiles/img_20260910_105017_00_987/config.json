@@ -52,5 +52,7 @@
       "default_on": true,
       "type": "tile"
     }
-  ]
+  ],
+  "alt_checked": true,
+  "alt": -0.0
 }

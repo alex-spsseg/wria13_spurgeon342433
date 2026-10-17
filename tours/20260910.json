@@ -6,33 +6,41 @@
       "display_name": "Aerial 360 Shot",
       "lat": 46.95293088888889,
       "lng": -122.78053947222222,
-      "platform": "aerial"
+      "platform": "aerial",
+      "alt": 67.08,
+      "rel_alt": 22.13
     },
     {
       "site_id": "img_20260910_104917_00_986",
       "display_name": "Culvert Inlets",
       "lat": 46.952882289994655,
-      "lng": -122.78070866996785
+      "lng": -122.78070866996785,
+      "alt": -0.0
     },
     {
       "site_id": "img_20260910_105017_00_987",
       "display_name": "Culvert Outlets",
       "lat": 46.952863979985864,
-      "lng": -122.78102517006802
+      "lng": -122.78102517006802,
+      "alt": -0.0
     },
     {
       "site_id": "dji_20260910112203_0008_d",
       "display_name": "Drone Shot #1",
       "lat": 46.953366083333336,
       "lng": -122.77963286111111,
-      "platform": "aerial"
+      "platform": "aerial",
+      "alt": 137.08,
+      "rel_alt": 92.15
     },
     {
       "site_id": "dji_20260910112209_0010_d",
       "display_name": "Drone Shot #2",
       "lat": 46.953167083333334,
       "lng": -122.77990119444445,
-      "platform": "aerial"
+      "platform": "aerial",
+      "alt": 137.06,
+      "rel_alt": 92.07
     },
     {
       "site_id": "342433_report_with_4_pages",

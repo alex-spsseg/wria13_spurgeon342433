@@ -52,5 +52,8 @@
       "type": "tile"
     }
   ],
-  "platform": "aerial"
+  "platform": "aerial",
+  "alt_checked": true,
+  "alt": 67.08,
+  "rel_alt": 22.13
 }
